@@ -1,0 +1,4 @@
+config.yaml
+results/
+suite/private/
+__pycache__/
