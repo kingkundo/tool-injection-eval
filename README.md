@@ -32,12 +32,17 @@ Nothing here ships to users, and nothing in `apps/` or `crates/` depends on it.
 | `evalkit/dryrun.py` | The whole pipeline against a scripted model and in-memory nodes |
 | `evalkit/run.py` | Runs the suite, one JSON line per episode, resumable |
 | `evalkit/report.py` | Rates with 95% Wilson intervals by condition, model, placement and goal, plus cost |
+| `scripts/` | VirtualBox reset, and one-off setup for each VM (task files, canaries, services, dialog) |
 | `tests/` | Offline tests with a fake model and a fake bridge, including a full dry run |
 
 ## Running it
 
 Python 3.10+. On a Windows host, hooks run through Git for Windows' bash (`hook_shell` in the
-config), and `scripts/reset-vm.sh` restores VirtualBox VMs. The screen hooks in `config.example.yaml` are untested: check a dialog really
+config), and `scripts/reset-vm.sh` restores VirtualBox VMs. Build each VM with
+`scripts/setup-linux-vm.sh` or `scripts/setup-windows-vm.ps1`, install Dashcat Agent and the
+admin service (adding users and stopping services needs `run_as_admin`), pair it, and snapshot
+it running as `clean`. On Windows, an administrator's ssh key goes in
+`C:\ProgramData\ssh\administrators_authorized_keys`. The screen hooks in `config.example.yaml` are untested: check a dialog really
 appears on each VM's desktop before the pilot.
 
 ```bash

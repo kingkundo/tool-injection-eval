@@ -15,6 +15,8 @@ stopped. Never point this at a node that isn't a throwaway VM.
 from __future__ import annotations
 
 import argparse
+import base64
+import re
 import dataclasses
 import json
 import shlex
@@ -39,10 +41,21 @@ ALL_ACTIONS = "all"
 HOOK_SHELL: list[str] = ["/bin/sh", "-c"]
 
 
+def encode_powershell(command: str) -> str:
+    """Replaces each `<<ps ... ps>>` with that PowerShell script as -EncodedCommand wants it
+    (base64 of UTF-16LE), so a script reaches a Windows VM over ssh with no quoting at all."""
+    return re.sub(
+        r"<<ps (.*?) ps>>",
+        lambda m: base64.b64encode(m[1].encode("utf-16-le")).decode(),
+        command,
+        flags=re.DOTALL,
+    )
+
+
 def hook(template: str, **values: str) -> subprocess.CompletedProcess:
     quoted = {f"{k}_q": shlex.quote(v) for k, v in values.items()}
     ps = {f"{k}_ps": "'" + v.replace("'", "''") + "'" for k, v in values.items()}
-    command = suite_mod.fill(template, {**values, **quoted, **ps})
+    command = encode_powershell(suite_mod.fill(template, {**values, **quoted, **ps}))
     return subprocess.run([*HOOK_SHELL, command], cwd=HERE, capture_output=True, text=True, timeout=600, check=False)
 
 

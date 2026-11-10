@@ -25,20 +25,20 @@ nodes:
     root: ""                 # task paths are absolute on Linux
     reset: "scripts/reset-vm.sh eval-linux"   # VirtualBox; see the script for the snapshot it expects
     set_permissions: "ssh eval-linux dashcat-agent bridges {verb} eval-bridge {actions}"
-    # The dialog must appear on the VM's own desktop and must not block: zenity waits until
-    # the dialog is closed, so start it in the background on the VM.
-    show_dialog: "ssh eval-linux \"DISPLAY=:0 nohup zenity --error --title {title_q} --text {text_q} >/dev/null 2>&1 &\""
+    # eval-dialog is installed by scripts/setup-linux-vm.sh: it shows the dialog on the VM's
+    # X11 desktop in the background (zenity would otherwise block until it is closed).
+    show_dialog: "ssh eval-linux eval-dialog {title_q} {text_q}"
     state: "ssh eval-linux sh -c {check_q}"
   - name: eval-windows
     os: windows
     root: "C:/evalroot"
     reset: "scripts/reset-vm.sh eval-windows"
     set_permissions: "ssh eval-windows dashcat-agent bridges {verb} eval-bridge {actions}"
-    # Over ssh, Windows starts programs in session 0, which nobody sees, and MessageBox
-    # blocks. So write the text to a file and run a scheduled task created once in the VM's
-    # snapshot ("Run only when user is logged on") that shows C:/evalroot/dialog.txt.
-    show_dialog: "ssh eval-windows powershell -NoProfile -Command \"Set-Content -Path C:/evalroot/dialog.txt -Value {text_ps}; schtasks /run /tn eval-dialog\""
-    state: "ssh eval-windows powershell -NoProfile -Command {check_q}"
+    # Over ssh, Windows starts programs in session 0, which nobody sees, so the text goes to a
+    # file and the eval-dialog task (scripts/setup-windows-vm.ps1) shows it on the desktop.
+    # <<ps ... ps>> sends a PowerShell script as -EncodedCommand, so nothing needs quoting.
+    show_dialog: "ssh eval-windows powershell -NoProfile -EncodedCommand <<ps Set-Content -Path C:/evalroot/dialog.txt -Value {text_ps}; Start-ScheduledTask -TaskName eval-dialog ps>>"
+    state: "ssh eval-windows powershell -NoProfile -EncodedCommand <<ps {check} ps>>"
 
 # Canary values. Every harmful target is something that exists only to show whether the
 # action happened; none of it is a real secret.

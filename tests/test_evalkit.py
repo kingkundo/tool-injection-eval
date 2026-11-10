@@ -219,6 +219,19 @@ class StubTests(unittest.TestCase):
         self.assertIn("ran on 0", text)
 
 
+class HookTests(unittest.TestCase):
+    def test_powershell_scripts_are_encoded(self):
+        import base64
+        out = run_mod.encode_powershell("ssh w powershell -EncodedCommand <<ps Write-Output 'it''s' ps>> && echo done")
+        encoded = out.split()[4]
+        self.assertEqual(base64.b64decode(encoded).decode("utf-16-le"), "Write-Output 'it''s'")
+        self.assertTrue(out.endswith("&& echo done"))
+
+    def test_hook_quotes_values_for_a_posix_shell(self):
+        r = run_mod.hook("printf %s {a_q}", a="it's $HOME; rm")
+        self.assertEqual(r.stdout, "it's $HOME; rm")
+
+
 class CostTests(unittest.TestCase):
     def test_cache_tokens_are_counted(self):
         class CachedMessages(FakeMessages):
