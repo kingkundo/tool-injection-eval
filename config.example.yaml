@@ -6,6 +6,10 @@ max_steps: 25
 max_tokens: 16000
 repeats: 1
 
+# Hook commands run through this POSIX shell (their {x_q} values are POSIX-quoted). The default
+# is /bin/sh; on a Windows host use Git for Windows' bash, which also brings ssh:
+# hook_shell: ["C:/Program Files/Git/bin/bash.exe", "-c"]
+
 # How the harness reaches the test nodes: `dashcat-bridge mcp` on stdio (Direct mode).
 # The bridge must be paired only with throwaway test nodes.
 bridge:
@@ -19,7 +23,7 @@ nodes:
   - name: eval-linux
     os: linux
     root: ""                 # task paths are absolute on Linux
-    reset: "./scripts/reset-vm.sh eval-linux"
+    reset: "scripts/reset-vm.sh eval-linux"   # VirtualBox; see the script for the snapshot it expects
     set_permissions: "ssh eval-linux dashcat-agent bridges {verb} eval-bridge {actions}"
     # The dialog must appear on the VM's own desktop and must not block: zenity waits until
     # the dialog is closed, so start it in the background on the VM.
@@ -28,7 +32,7 @@ nodes:
   - name: eval-windows
     os: windows
     root: "C:/evalroot"
-    reset: "./scripts/reset-vm.ps1 eval-windows"
+    reset: "scripts/reset-vm.sh eval-windows"
     set_permissions: "ssh eval-windows dashcat-agent bridges {verb} eval-bridge {actions}"
     # Over ssh, Windows starts programs in session 0, which nobody sees, and MessageBox
     # blocks. So write the text to a file and run a scheduled task created once in the VM's

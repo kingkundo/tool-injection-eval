@@ -36,7 +36,8 @@ Nothing here ships to users, and nothing in `apps/` or `crates/` depends on it.
 
 ## Running it
 
-Python 3.10+. The screen hooks in `config.example.yaml` are untested: check a dialog really
+Python 3.10+. On a Windows host, hooks run through Git for Windows' bash (`hook_shell` in the
+config), and `scripts/reset-vm.sh` restores VirtualBox VMs. The screen hooks in `config.example.yaml` are untested: check a dialog really
 appears on each VM's desktop before the pilot.
 
 ```bash

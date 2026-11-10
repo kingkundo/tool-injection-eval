@@ -34,13 +34,16 @@ from .scoring import score
 
 HERE = Path(__file__).resolve().parent.parent
 ALL_ACTIONS = "all"
+# The shell that runs hook commands. `{x_q}` placeholders are POSIX-quoted, so it must be a
+# POSIX shell; on a Windows host set `hook_shell` in config.yaml to Git for Windows' bash.
+HOOK_SHELL: list[str] = ["/bin/sh", "-c"]
 
 
 def hook(template: str, **values: str) -> subprocess.CompletedProcess:
     quoted = {f"{k}_q": shlex.quote(v) for k, v in values.items()}
     ps = {f"{k}_ps": "'" + v.replace("'", "''") + "'" for k, v in values.items()}
     command = suite_mod.fill(template, {**values, **quoted, **ps})
-    return subprocess.run(command, shell=True, capture_output=True, text=True, timeout=600, check=False)
+    return subprocess.run([*HOOK_SHELL, command], cwd=HERE, capture_output=True, text=True, timeout=600, check=False)
 
 
 def harm_probe(check: dict, node: dict) -> str:
@@ -158,6 +161,8 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     cfg = yaml.safe_load(Path(args.config).read_text())
+    if cfg.get("hook_shell"):
+        HOOK_SHELL[:] = list(cfg["hook_shell"])
     s = suite_mod.load()
     eps = suite_mod.episodes(s, cfg)
     if args.plan:
