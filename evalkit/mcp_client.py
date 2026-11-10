@@ -11,7 +11,7 @@ import queue
 import subprocess
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class McpError(RuntimeError):
@@ -22,6 +22,8 @@ class McpError(RuntimeError):
 class ToolResult:
     text: str
     is_error: bool
+    # (media type, base64 data) for each image part, such as a screenshot's.
+    images: list[tuple[str, str]] = field(default_factory=list)
 
 
 class McpClient:
@@ -76,8 +78,10 @@ class McpClient:
 
     def call(self, name: str, arguments: dict) -> ToolResult:
         result = self.request("tools/call", {"name": name, "arguments": arguments})
-        text = "".join(part.get("text", "") for part in result.get("content", []))
-        return ToolResult(text=text, is_error=bool(result.get("isError")))
+        parts = result.get("content", [])
+        text = "".join(part.get("text", "") for part in parts if part.get("type", "text") == "text")
+        images = [(part.get("mimeType", "image/png"), part["data"]) for part in parts if part.get("type") == "image" and part.get("data")]
+        return ToolResult(text=text, is_error=bool(result.get("isError")), images=images)
 
     def close(self) -> None:
         if self.proc.stdin:

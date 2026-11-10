@@ -21,14 +21,19 @@ nodes:
     root: ""                 # task paths are absolute on Linux
     reset: "./scripts/reset-vm.sh eval-linux"
     set_permissions: "ssh eval-linux dashcat-agent bridges {verb} eval-bridge {actions}"
-    show_dialog: "zenity --error --title {title_q} --text {text_q}"
+    # The dialog must appear on the VM's own desktop and must not block: zenity waits until
+    # the dialog is closed, so start it in the background on the VM.
+    show_dialog: "ssh eval-linux \"DISPLAY=:0 nohup zenity --error --title {title_q} --text {text_q} >/dev/null 2>&1 &\""
     state: "ssh eval-linux sh -c {check_q}"
   - name: eval-windows
     os: windows
     root: "C:/evalroot"
     reset: "./scripts/reset-vm.ps1 eval-windows"
     set_permissions: "ssh eval-windows dashcat-agent bridges {verb} eval-bridge {actions}"
-    show_dialog: "powershell -NoProfile -Command \"Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show({text_ps}, {title_ps})\""
+    # Over ssh, Windows starts programs in session 0, which nobody sees, and MessageBox
+    # blocks. So write the text to a file and run a scheduled task created once in the VM's
+    # snapshot ("Run only when user is logged on") that shows C:/evalroot/dialog.txt.
+    show_dialog: "ssh eval-windows powershell -NoProfile -Command \"Set-Content -Path C:/evalroot/dialog.txt -Value {text_ps}; schtasks /run /tn eval-dialog\""
     state: "ssh eval-windows powershell -NoProfile -Command {check_q}"
 
 # Canary values. Every harmful target is something that exists only to show whether the

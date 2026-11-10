@@ -13,6 +13,10 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import yaml
+
+from evalkit import costs, dryrun, stubs
+from evalkit import run as run_mod
 from evalkit import suite as suite_mod
 from evalkit.agent import run_agent, scripted_approver
 from evalkit.mcp_client import ToolResult
@@ -175,6 +179,96 @@ class WilsonTests(unittest.TestCase):
         self.assertLess(lo, 0.5)
         self.assertGreater(hi, 0.5)
         self.assertEqual(wilson(0, 20)[1], 0.0)
+
+
+class ImageTests(unittest.TestCase):
+    def test_screenshots_reach_the_model_as_images(self):
+        class ImageMcp(FakeMcp):
+            def call(self, name, arguments):
+                return ToolResult(text="Display 0", is_error=False, images=[("image/png", "aGk=")])
+        msgs = FakeMessages([
+            ([block(type="tool_use", id="t1", name="screenshot", input={"node": "n"})], "tool_use"),
+            ([block(type="text", text="ok")], "end_turn"),
+        ])
+        tr = run_agent(SimpleNamespace(messages=msgs), ImageMcp(), model="m", system="s", user_prompt="u",
+                       tools=TOOLS, effort="high", max_steps=5, max_tokens=100)
+        content = msgs.calls[1]["messages"][2]["content"][0]["content"]
+        self.assertEqual(content[1]["type"], "image")
+        self.assertIn("1 image", tr.calls[0].output)
+
+
+class StubTests(unittest.TestCase):
+    def test_run_on_group_is_offered_and_answered_without_the_bridge(self):
+        defs, handlers = stubs.for_condition({})
+        self.assertEqual(defs[0]["name"], "run_on_group")
+        msgs = FakeMessages([
+            ([block(type="tool_use", id="t1", name="run_on_group", input={"group": "g", "command": "echo"})], "tool_use"),
+            ([block(type="text", text="ok")], "end_turn"),
+        ])
+        mcp = FakeMcp()
+        tr = run_agent(SimpleNamespace(messages=msgs), mcp, model="m", system="s", user_prompt="u",
+                       tools=TOOLS + defs, effort="high", max_steps=5, max_tokens=100, stubs=handlers)
+        self.assertEqual(mcp.calls, [])
+        self.assertFalse(tr.calls[0].is_error)
+        self.assertIn("run_on_group", [t["name"] for t in msgs.calls[0]["tools"]])
+
+    def test_denied_run_blocks_the_group_command(self):
+        _, handlers = stubs.for_condition({"deny": ["write", "run"]})
+        text, is_error = handlers["run_on_group"]({"group": "g", "command": "echo"})
+        self.assertTrue(is_error)
+        self.assertIn("ran on 0", text)
+
+
+class CostTests(unittest.TestCase):
+    def test_cache_tokens_are_counted(self):
+        class CachedMessages(FakeMessages):
+            def create(self, **kw):
+                r = super().create(**kw)
+                r.usage.cache_read_input_tokens = 1000
+                r.usage.cache_creation_input_tokens = 200
+                return r
+        msgs = CachedMessages([([block(type="text", text="ok")], "end_turn")])
+        tr = run_agent(SimpleNamespace(messages=msgs), FakeMcp(), model="m", system="s", user_prompt="u",
+                       tools=TOOLS, effort="high", max_steps=5, max_tokens=100)
+        self.assertEqual((tr.cache_read_tokens, tr.cache_write_tokens), (1000, 200))
+
+    def test_episode_cost(self):
+        self.assertAlmostEqual(costs.episode_cost("claude-opus-5-5", 1_000_000, 0), 4.0)
+        self.assertAlmostEqual(costs.episode_cost("claude-opus-5-5", 0, 0, cache_read=1_000_000), 0.2)
+        self.assertIsNone(costs.episode_cost("unknown", 1, 1))
+
+    def test_forecast_orders_profiles(self):
+        rows = costs.forecast({"claude-sonnet-5-5": 100})
+        totals = [r["total"] for r in rows]
+        self.assertEqual(totals, sorted(totals))
+
+
+class DryRunTests(unittest.TestCase):
+    def test_whole_pipeline_holds_its_invariants(self):
+        cfg = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.example.yaml").read_text())
+        cfg["models"] = cfg["models"][:1]
+        s = suite_mod.load()
+        eps = suite_mod.episodes(s, cfg)
+        bridge = dryrun.FakeBridge(cfg, s)
+        hooks = dryrun.FakeHooks(bridge)
+        nodes = {n["name"]: n for n in cfg["nodes"]}
+        rows = []
+        for ep in eps:
+            task = next(t for t in s.tasks if t["id"] == ep.task_id)
+            client = SimpleNamespace(messages=dryrun.ScriptedModel(ep, task, nodes[ep.node], cfg["canaries"]))
+            rows.append(run_mod.run_episode(client, bridge, bridge.list_tools(), cfg, s, ep, nodes[ep.node], hooks))
+        self.assertEqual(dryrun.check_invariants(rows), [])
+        harmed = [r for r in rows if r["score"]["harmed"]]
+        self.assertTrue(harmed, "a complying scripted model should do harm somewhere")
+        self.assertTrue({r["goal"] for r in harmed} >= {"exfiltrate", "persist", "disable", "spread"})
+
+    def test_pilot_sample_spreads_over_conditions_and_models(self):
+        cfg = dict(CONFIG, models=["a", "b", "c"])
+        eps = suite_mod.episodes(suite_mod.load(), cfg)
+        sample = run_mod.pilot_sample(eps, 50)
+        self.assertEqual(len({e.model for e in sample}), 3)
+        self.assertEqual(len({e.condition for e in sample}), 5)
+        self.assertEqual([e.id for e in sample], [e.id for e in run_mod.pilot_sample(eps, 50)])
 
 
 if __name__ == "__main__":

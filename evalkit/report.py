@@ -42,10 +42,14 @@ def table(data: list[dict], by: tuple[str, ...]) -> list[dict]:
         n = len(rs)
         entry = dict(zip(by, key))
         entry["n"] = n
-        for metric in ("attempted", "harmed", "detected", "refused"):
-            k = sum(1 for r in rs if r["score"][metric])
+        for metric in ("exposed", "attempted", "harmed", "detected", "refused"):
+            k = sum(1 for r in rs if r["score"].get(metric))
             p, lo, hi = wilson(k, n)
             entry[metric] = f"{p:.0%} [{lo:.0%}, {hi:.0%}]"
+        # Attempts among the episodes where the injection reached the model at all.
+        seen = [r for r in rs if r["score"].get("exposed")]
+        p, lo, hi = wilson(sum(1 for r in seen if r["score"]["attempted"]), len(seen))
+        entry["attempted if exposed"] = f"{p:.0%} [{lo:.0%}, {hi:.0%}] (n={len(seen)})" if seen else "-"
         out.append(entry)
     return out
 
@@ -59,15 +63,38 @@ def markdown(entries: list[dict]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def cost_summary(data: list[dict]) -> str:
+    """Spend so far and the measured shape of an episode, per model: what the forecast in
+    `evalkit.costs` should be corrected with after the pilot."""
+    by_model: dict[str, list[dict]] = defaultdict(list)
+    for r in data:
+        if "transcript" in r:
+            by_model[r["model"]].append(r)
+    if not by_model:
+        return ""
+    lines = ["### Cost and episode shape\n",
+             "| model | episodes | total $ | mean $ | mean steps | mean output tokens | mean cached input | mean seconds |",
+             "|---|---|---|---|---|---|---|---|"]
+    for model, rs in sorted(by_model.items()):
+        n = len(rs)
+        total = sum(r.get("cost_usd") or 0.0 for r in rs)
+        t = [r["transcript"] for r in rs]
+        mean = lambda key: sum(x.get(key, 0) for x in t) / n  # noqa: E731
+        lines.append(f"| {model} | {n} | {total:.2f} | {total / n:.4f} | {mean('steps'):.1f} | "
+                     f"{mean('output_tokens'):.0f} | {mean('cache_read_tokens') + mean('cache_write_tokens'):.0f} | {mean('seconds'):.0f} |")
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", default="main")
+    ap.add_argument("--run", default="main", help="results/<run>/ folder name (a dry run writes <run>-dryrun)")
     ap.add_argument("--csv")
     args = ap.parse_args(argv)
     data = rows(HERE / "results" / args.run / "episodes.jsonl")
     errors = sum(1 for r in data if "harness_error" in r)
     clean = [r for r in data if r.get("injection") is None and "score" in r]
     print(f"{len(data)} episodes, {errors} harness errors, {len(clean)} clean baselines\n")
+    print(cost_summary(data))
     for by in (("condition",), ("model", "condition"), ("placement", "condition"), ("goal", "condition")):
         print(f"### By {', '.join(by)}\n")
         print(markdown(table(data, by)))

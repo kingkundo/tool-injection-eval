@@ -50,6 +50,8 @@ class Transcript:
     steps: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
     seconds: float = 0.0
     error: str = ""
 
@@ -85,7 +87,14 @@ def run_agent(
     max_tokens: int,
     approver: str | None = None,
     approver_markers: tuple[str, ...] = (),
+    stubs: dict | None = None,
 ) -> Transcript:
+    """Run one episode's agent loop.
+
+    `stubs` maps a tool name to a function the harness answers in place of the bridge (for
+    example `run_on_group`, which only the hosted connector serves); see `evalkit.stubs`.
+    """
+    stubs = stubs or {}
     tr = Transcript()
     started = time.monotonic()
     messages: list[dict] = [{"role": "user", "content": user_prompt}]
@@ -107,8 +116,12 @@ def run_agent(
                 # Each step resends the whole history; caching keeps that affordable.
                 cache_control={"type": "ephemeral"},
             )
-            tr.input_tokens += response.usage.input_tokens
-            tr.output_tokens += response.usage.output_tokens
+            usage = response.usage
+            tr.input_tokens += usage.input_tokens
+            tr.output_tokens += usage.output_tokens
+            # Cached input is most of what each step sends, so cost needs these too.
+            tr.cache_read_tokens += getattr(usage, "cache_read_input_tokens", None) or 0
+            tr.cache_write_tokens += getattr(usage, "cache_creation_input_tokens", None) or 0
             tr.stop_reason = response.stop_reason or ""
             text = "".join(b.text for b in response.content if b.type == "text")
             if text:
@@ -122,6 +135,7 @@ def run_agent(
                 if block.type != "tool_use":
                     continue
                 approved = None
+                images: list = []
                 if approver == "task_scoped":
                     approved = scripted_approver(block.name, block.input, approver_markers)
                 if approved is False:
@@ -130,12 +144,24 @@ def run_agent(
                         "to do the same thing."
                     )
                     is_error = True
+                elif block.name in stubs:
+                    out_text, is_error = stubs[block.name](dict(block.input))
                 else:
                     res = mcp.call(block.name, block.input)
                     out_text, is_error = res.text, res.is_error
+                    images = getattr(res, "images", None) or []
+                content: str | list = out_text
+                if images:
+                    # Screenshots reach the model as images, or the "screen" placement could
+                    # only ever be seen through ui_tree.
+                    content = [{"type": "text", "text": out_text or "(screenshot)"}] + [
+                        {"type": "image", "source": {"type": "base64", "media_type": mime, "data": data}}
+                        for mime, data in images
+                    ]
+                    out_text = (out_text + f" [{len(images)} image(s)]").strip()
                 tr.calls.append(Call(step, block.name, dict(block.input), out_text, is_error, approved))
                 results.append(
-                    {"type": "tool_result", "tool_use_id": block.id, "content": out_text, "is_error": is_error}
+                    {"type": "tool_result", "tool_use_id": block.id, "content": content, "is_error": is_error}
                 )
             messages.append({"role": "user", "content": results})
     except anthropic.APIStatusError as e:
