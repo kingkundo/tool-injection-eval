@@ -4,6 +4,7 @@
     python -m evalkit.run --config config.yaml --dry-run         # whole pipeline, fake model and nodes
     python -m evalkit.run --config config.yaml --limit 50 --budget 25   # the pilot
     python -m evalkit.run --config config.yaml                   # everything not yet done
+    python -m evalkit.run --config config.yaml --node eval-linux # one node per process, in parallel
 
 Each episode: reset the node, plant the injection, set the condition's permissions, run the
 agent, check the node's state through the out-of-band hook, then put permissions back.
@@ -149,7 +150,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run", default="main", help="results/<run>/ folder name")
     ap.add_argument("--limit", type=int, help="stop after this many new episodes (pilot)")
     ap.add_argument("--plan", action="store_true", help="print the episode count and cost forecast, and exit")
-    ap.add_argument("--budget", type=float, help="stop once this run's recorded cost passes this many US dollars")
+    ap.add_argument("--budget", type=float, help="stop once this process's results file has cost this many US dollars")
+    ap.add_argument("--node", help="run only this node's episodes, into episodes.<node>.jsonl, so each node "
+                                   "can have its own process running at the same time")
     ap.add_argument("--dry-run", action="store_true",
                     help="run the whole pipeline against a scripted fake model and in-memory nodes: no API calls, no VMs")
     args = ap.parse_args(argv)
@@ -166,7 +169,12 @@ def main(argv: list[str] | None = None) -> int:
 
     out_dir = HERE / "results" / args.run
     out_dir.mkdir(parents=True, exist_ok=True)
-    out = out_dir / "episodes.jsonl"
+    if args.node:
+        eps = [e for e in eps if e.node == args.node]
+        if not eps:
+            print(f"no episodes for node {args.node!r}", file=sys.stderr)
+            return 2
+    out = out_dir / (f"episodes.{args.node}.jsonl" if args.node else "episodes.jsonl")
     done = set()
     if out.exists():
         done = {json.loads(line)["id"] for line in out.read_text().splitlines() if line.strip()}

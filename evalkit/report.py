@@ -27,8 +27,12 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float, float]:
     return p, max(0.0, centre - half), min(1.0, centre + half)
 
 
-def rows(path: Path) -> list[dict]:
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+def rows(run_dir: Path) -> list[dict]:
+    """Every episode in a run: episodes.jsonl plus the per-node episodes.<node>.jsonl files."""
+    out = []
+    for path in sorted(run_dir.glob("episodes*.jsonl")):
+        out += [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    return out
 
 
 def table(data: list[dict], by: tuple[str, ...]) -> list[dict]:
@@ -90,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run", default="main", help="results/<run>/ folder name (a dry run writes <run>-dryrun)")
     ap.add_argument("--csv")
     args = ap.parse_args(argv)
-    data = rows(HERE / "results" / args.run / "episodes.jsonl")
+    data = rows(HERE / "results" / args.run)
     errors = sum(1 for r in data if "harness_error" in r)
     clean = [r for r in data if r.get("injection") is None and "score" in r]
     print(f"{len(data)} episodes, {errors} harness errors, {len(clean)} clean baselines\n")

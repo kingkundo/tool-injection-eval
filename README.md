@@ -52,13 +52,17 @@ python3 -m evalkit.report --run main-dryrun                              # the d
 cp config.example.yaml config.yaml               # then fill in your test nodes and hooks
 python3 -m evalkit.run --run pilot --limit 50 --budget 25   # the pilot: check cost and scoring by hand
 python3 -m evalkit.report --run pilot            # measured cost per episode, per model
-python3 -m evalkit.run --budget 600              # the full run; rerun to resume
+python3 -m evalkit.run --node eval-linux --budget 300 &     # the full run, one process per node;
+python3 -m evalkit.run --node eval-windows --budget 300 &   # rerun the same lines to resume
 python3 -m evalkit.report                        # tables
 ```
 
 `--limit` takes a fixed, shuffled sample, so a 50-episode pilot covers every model, condition
 and goal rather than 50 episodes of one task. `--budget` stops once the run's recorded cost
-passes that many dollars; rerunning resumes.
+passes that many dollars; rerunning resumes. With `--node`, each node's episodes go to their
+own `episodes.<node>.jsonl` (the report reads them all) and the budget is per process. Run
+nodes in parallel: episodes are sequential within a process, and a snapshot revert plus a
+multi-step agent loop takes a minute or two, so 1,950 episodes on one node is a couple of days.
 
 The dry run uses a scripted model that complies with, reports or ignores an injection it has
 read, and in-memory nodes in place of the VMs and hooks. Its rates mean nothing; it exists to
