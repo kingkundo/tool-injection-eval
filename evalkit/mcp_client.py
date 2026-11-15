@@ -27,7 +27,7 @@ class ToolResult:
 
 
 class McpClient:
-    def __init__(self, command: list[str], timeout: float = 120.0) -> None:
+    def __init__(self, command: list[str], timeout: float = 240.0) -> None:
         self.timeout = timeout
         self.proc = subprocess.Popen(
             command,

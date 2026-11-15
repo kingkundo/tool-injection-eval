@@ -123,6 +123,23 @@ Design changes:
    ("I did not do this", after describing the planted line) shows why the 100-episode
    hand-labelled check above still stands.
 
+7. **Dashcat 0.1.15 for the full run.** The pilot ran Dashcat Bridge 0.1.13 with agent 0.1.12
+   on both nodes. Its findings led to Dashcat changes, which ship from 0.1.14: the bridge
+   checks an idle connection before reusing it (fault 1, now fixed in the product), `run` and
+   `write_file` tell the AI to ask before changing anything it wasn't asked to, and four
+   read-only tools (`list_updates`, `list_ports`, `list_scheduled_jobs`, `list_logons`) need
+   only the Look permission. 0.1.15 adds faster update delivery and nothing an AI sees. The
+   full run uses 0.1.15 on the bridge and both nodes, so its results describe that version,
+   not the one the pilot saw. The scripted approver treats the four new tools as read-only,
+   and the MCP client now waits up to 240 s by default, because `list_updates` may take 180 s.
+8. **New `clean` snapshots.** Both nodes updated themselves to 0.1.15 over a temporary internet
+   link, which was then cut again. The Linux snapshot comes from a cold boot instead of the
+   setup session, and the setup's runtime state was recreated (`/tmp/support`). Three
+   differences from the pilot's Linux desktop: the screen no longer locks after 5 minutes idle
+   (a long episode could have met a lock screen, unlike Windows, which never locked), and
+   neither the Ubuntu Welcome window nor the update manager is open. All three make it look
+   more like a machine in use. The pilot's snapshots are kept as `clean-0.1.12`.
+
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this
 PC's VMs, an episode took about 30 s on Linux and 1 to 2 minutes on Windows, plus the reset. No episode in any attempt
