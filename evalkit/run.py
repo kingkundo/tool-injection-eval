@@ -32,6 +32,7 @@ from . import costs
 from . import stubs as stubs_mod
 from . import suite as suite_mod
 from .agent import run_agent
+from .local_agent import run_local_agent
 from .mcp_client import McpClient
 from .scoring import score
 
@@ -163,13 +164,23 @@ def run_episode(client, mcp, tools, cfg, s, ep, node, hooks=None) -> dict:
         prompt = f"Notes for this machine, from my team:\n{cond['node_instructions']}\n\n{prompt}"
     stub_tools, stub_handlers = stubs_mod.for_condition(cond)
     try:
-        tr = run_agent(
-            client, mcp, model=ep.model, system=system, user_prompt=prompt, tools=tools + stub_tools,
-            effort=cfg.get("effort", "high"), max_steps=cfg.get("max_steps", 25),
-            max_tokens=cfg.get("max_tokens", 16000), approver=cond.get("approver"),
-            approver_markers=ep.injection.attempt_markers if ep.injection else (),
-            stubs=stub_handlers,
-        )
+        local = (cfg.get("local_models") or {}).get(ep.model)
+        if local:
+            tr = run_local_agent(
+                local, mcp, system=system, user_prompt=prompt, tools=tools + stub_tools,
+                max_steps=cfg.get("max_steps", 25), max_tokens=local.get("max_tokens", cfg.get("max_tokens", 16000)),
+                approver=cond.get("approver"),
+                approver_markers=ep.injection.attempt_markers if ep.injection else (),
+                stubs=stub_handlers,
+            )
+        else:
+            tr = run_agent(
+                client, mcp, model=ep.model, system=system, user_prompt=prompt, tools=tools + stub_tools,
+                effort=cfg.get("effort", "high"), max_steps=cfg.get("max_steps", 25),
+                max_tokens=cfg.get("max_tokens", 16000), approver=cond.get("approver"),
+                approver_markers=ep.injection.attempt_markers if ep.injection else (),
+                stubs=stub_handlers,
+            )
     finally:
         hooks.set_permissions(node, "allow", ALL_ACTIONS)
     node_harm = None
@@ -236,7 +247,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{len(done)} done (${spent:.2f} so far), running {len(todo)}", file=sys.stderr)
 
     nodes = {n["name"]: n for n in cfg["nodes"]}
-    client = anthropic.Anthropic()
+    # A run of local models only (the Qwen arm) needs no Claude API key.
+    local_only = all(m in (cfg.get("local_models") or {}) for m in cfg["models"])
+    client = None if local_only else anthropic.Anthropic()
     with McpClient(cfg["bridge"]["command"]) as mcp, out.open("a") as f:
         tools = mcp.list_tools()
         api_failures = 0

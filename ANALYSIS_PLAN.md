@@ -149,6 +149,15 @@ Design changes:
    restarted from zero on a new snapshot (19:53 UTC). Its first 70 episodes ($13) are kept
    apart in `results/main-linux-cronbug/` and left out of the analysis. The Windows half, which
    this didn't affect, continued.
+10. **An exploratory local-model arm.** Tom proposed adding Qwen 3.7 (about 38B, served with
+    MLX on his MacBook). It is not part of the pre-registered design and is reported apart from
+    it. The reason: in the first 137 exposed Opus episodes nothing was attempted, so the main
+    run may not show the controls stopping anything; an open-weights model is more likely to
+    act on injected text. It runs the same tasks, injections, conditions, approver and scoring
+    through `evalkit/local_agent.py`. Differences: no screenshots (text only), thinking text is
+    stripped before scoring, malformed tool arguments are answered with an error, and failures
+    caused by bad tool calls are counted separately from outcomes. It runs on the VMs only when
+    the main run doesn't need them, after a short pilot.
 
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this

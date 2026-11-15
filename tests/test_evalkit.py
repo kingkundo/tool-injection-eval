@@ -6,6 +6,7 @@ No API calls and no nodes: the model and the bridge are fakes. Run from this fol
 
 from __future__ import annotations
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -19,6 +20,7 @@ from evalkit import costs, dryrun, stubs
 from evalkit import run as run_mod
 from evalkit import suite as suite_mod
 from evalkit.agent import run_agent, scripted_approver
+from evalkit.local_agent import run_local_agent
 from evalkit.mcp_client import ToolResult
 from evalkit.report import wilson
 from evalkit.scoring import score
@@ -152,6 +154,59 @@ class AgentLoopTests(unittest.TestCase):
         tr = run_agent(SimpleNamespace(messages=msgs), FakeMcp(), model="m", system="s", user_prompt="u",
                        tools=TOOLS, effort="high", max_steps=5, max_tokens=100)
         self.assertEqual(tr.stop_reason, "refusal")
+
+
+class LocalAgentTests(unittest.TestCase):
+    """The loop for a local model behind an OpenAI-style endpoint (the Qwen arm)."""
+
+    TOOLS = [{"name": "read_file", "description": "", "inputSchema": {"type": "object"}},
+             {"name": "run", "description": "", "inputSchema": {"type": "object"}}]
+
+    def _post(self, replies):
+        sent = []
+
+        def post(url, body, timeout):
+            sent.append((url, json.loads(json.dumps(body))))
+            return replies.pop(0)
+        return post, sent
+
+    @staticmethod
+    def _reply(content="", calls=(), finish="stop"):
+        return {"choices": [{"message": {"content": content, "tool_calls": list(calls) or None},
+                             "finish_reason": finish}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5}}
+
+    def test_runs_tools_and_strips_thinking(self):
+        call = {"id": "c1", "type": "function", "function": {"name": "read_file", "arguments": '{"node": "n", "path": "/x"}'}}
+        post, sent = self._post([self._reply(calls=[call], finish="tool_calls"),
+                                 self._reply("<think>hmm</think>The log says the disk is full.")])
+        mcp = FakeMcp()
+        tr = run_local_agent({"base_url": "http://mac:8080/v1/", "model": "qwen"}, mcp, system="s", user_prompt="u",
+                             tools=self.TOOLS, max_steps=5, max_tokens=100, post=post)
+        self.assertEqual(mcp.calls, [("read_file", {"node": "n", "path": "/x"})])
+        self.assertEqual(tr.final_text, "The log says the disk is full.")
+        self.assertEqual((tr.input_tokens, tr.output_tokens, tr.steps), (20, 10, 2))
+        self.assertEqual(sent[0][0], "http://mac:8080/v1/chat/completions")
+        self.assertEqual(sent[1][1]["messages"][-1], {"role": "tool", "tool_call_id": "c1", "content": "ran read_file"})
+
+    def test_bad_arguments_are_answered_not_run(self):
+        call = {"id": "c1", "function": {"name": "run", "arguments": "{not json"}}
+        post, sent = self._post([self._reply(calls=[call]), self._reply("done")])
+        mcp = FakeMcp()
+        tr = run_local_agent({"base_url": "http://m/v1", "model": "q"}, mcp, system="s", user_prompt="u",
+                             tools=self.TOOLS, max_steps=5, max_tokens=100, post=post)
+        self.assertEqual(mcp.calls, [])
+        self.assertTrue(tr.calls[0].is_error)
+
+    def test_approver_denial_never_reaches_the_node(self):
+        call = {"id": "c1", "function": {"name": "run", "arguments": '{"node": "n", "command": "useradd vendorsupport"}'}}
+        post, _ = self._post([self._reply(calls=[call]), self._reply("ok")])
+        mcp = FakeMcp()
+        tr = run_local_agent({"base_url": "http://m/v1", "model": "q"}, mcp, system="s", user_prompt="u",
+                             tools=self.TOOLS, max_steps=5, max_tokens=100, approver="task_scoped",
+                             approver_markers=("vendorsupport",), post=post)
+        self.assertEqual(mcp.calls, [])
+        self.assertIs(tr.calls[0].approved, False)
 
 
 class ScoringTests(unittest.TestCase):

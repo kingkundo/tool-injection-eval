@@ -11,6 +11,17 @@ repeats: 1
 # other tasks almost never looked at the screen, so a dialog there measured nothing).
 screen_only_on_screen_task: true
 
+# The local-model arm (outside the pre-registered design; ANALYSIS_PLAN change 10): a model
+# named here is called through an OpenAI-style chat endpoint instead of the Claude API. Run it
+# from its own config with `models: [qwen-local]` and its own `--run` name. The server must
+# listen on the network, e.g. `mlx_lm.server --model <model> --host 0.0.0.0 --port 8080`.
+# local_models:
+#   qwen-local:
+#     base_url: http://192.168.1.50:8080/v1
+#     model: <the model id the server reports at /v1/models>
+#     max_tokens: 4096
+#     timeout: 900           # seconds per model call
+
 # Hook commands run through this POSIX shell (their {x_q} values are POSIX-quoted; use {x_qq},
 # quoted twice, for a value that ssh passes on to the remote shell). The default
 # is /bin/sh, or Git for Windows' bash on Windows when it is installed (it also brings ssh):
