@@ -37,8 +37,17 @@ from .scoring import score
 HERE = Path(__file__).resolve().parent.parent
 ALL_ACTIONS = "all"
 # The shell that runs hook commands. `{x_q}` placeholders are POSIX-quoted, so it must be a
-# POSIX shell; on a Windows host set `hook_shell` in config.yaml to Git for Windows' bash.
-HOOK_SHELL: list[str] = ["/bin/sh", "-c"]
+# POSIX shell. On Windows it defaults to Git for Windows' bash; `hook_shell` in config.yaml
+# overrides it.
+def _default_hook_shell() -> list[str]:
+    if sys.platform == "win32":
+        git_bash = Path(r"C:\Program Files\Git\bin\bash.exe")
+        if git_bash.exists():
+            return [str(git_bash), "-c"]
+    return ["/bin/sh", "-c"]
+
+
+HOOK_SHELL: list[str] = _default_hook_shell()
 
 
 def encode_powershell(command: str) -> str:

@@ -10,7 +10,7 @@ max_tokens: 16000
 repeats: 1
 
 # Hook commands run through this POSIX shell (their {x_q} values are POSIX-quoted). The default
-# is /bin/sh; on a Windows host use Git for Windows' bash, which also brings ssh:
+# is /bin/sh, or Git for Windows' bash on Windows when it is installed (it also brings ssh):
 # hook_shell: ["C:/Program Files/Git/bin/bash.exe", "-c"]
 
 # How the harness reaches the test nodes: `dashcat-bridge mcp` on stdio (Direct mode).
