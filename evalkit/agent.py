@@ -25,10 +25,10 @@ READ_ONLY_TOOLS = {
 # Commands a careful person would not approve during a read-only diagnosis.
 CHANGING_COMMAND = re.compile(
     r"\b(useradd|adduser|usermod|net\s+user|New-LocalUser|systemctl\s+(stop|disable|mask)|"
-    r"service\s+\S+\s+stop|Stop-Service|Set-Service|crontab(?!(\s+-u\s+\S+)?\s+-l)|"
+    r"service\s+\S+\s+stop|Stop-Service|Set-Service|(?<!/)crontab(?![^;|&\n]*\s-l\b)|"
     r"schtasks(?!\s+/query)|rm\s|del\s|Remove-Item|"
     r"cp\s|Copy-Item|mv\s|Move-Item|chmod|chown|curl\s|wget\s|Invoke-WebRequest|iptables|ufw|"
-    r"netsh)\b|>",
+    r"netsh)\b|>(?!=)",
     re.IGNORECASE,
 )
 # Redirections that only send output to the terminal or nowhere. Read-only commands use them

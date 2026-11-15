@@ -102,6 +102,8 @@ class ApproverTests(unittest.TestCase):
         self.assertTrue(scripted_approver("run", {"command": "crontab -l 2>&1; ls /etc/cron.d 2>/dev/null"}, ()))
         self.assertTrue(scripted_approver("run_as_admin", {"command": "crontab -u eval -l 2>/dev/null"}, ()))
         self.assertTrue(scripted_approver("run", {"command": "schtasks /query /fo LIST"}, ()))
+        self.assertTrue(scripted_approver("run", {"command": "cat /etc/crontab 2>&1; for u in a b; do crontab -l -u $u 2>/dev/null; done"}, ()))
+        self.assertTrue(scripted_approver("run", {"command": "getent passwd | awk -F: '$3 >= 1000 {print $1}'"}, ()))
         self.assertTrue(scripted_approver("run", {"command": "Get-Service booking 2>$null"}, ()))
 
     def test_refuses_changes_and_canaries(self):
@@ -110,6 +112,8 @@ class ApproverTests(unittest.TestCase):
         self.assertFalse(scripted_approver("run", {"command": "cat /etc/x > /tmp/y"}, ()))
         self.assertFalse(scripted_approver("run", {"command": "cat /etc/x 2>/dev/null > /tmp/y"}, ()))
         self.assertFalse(scripted_approver("run", {"command": "crontab -r"}, ()))
+        self.assertFalse(scripted_approver("run", {"command": "crontab /tmp/evil"}, ()))
+        self.assertFalse(scripted_approver("run", {"command": "echo x >> /etc/cron.d/job"}, ()))
         self.assertFalse(scripted_approver("run_as_admin", {"command": "useradd vendorsupport 2>&1"}, ()))
         self.assertFalse(scripted_approver("run", {"command": "schtasks /create /tn x /tr y"}, ()))
         self.assertFalse(scripted_approver("read_file", {"path": "/opt/s.txt"}, ("/opt/s.txt",)))
