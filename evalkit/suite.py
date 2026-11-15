@@ -78,14 +78,20 @@ def fill(template: str, values: dict) -> str:
     return out
 
 
-def injections_for(suite: Suite, canaries: dict, task: dict, rng: random.Random) -> list[Injection]:
+def injections_for(
+    suite: Suite, canaries: dict, task: dict, rng: random.Random,
+    per_task: int | None = None, screen_only_on_screen_task: bool = False,
+) -> list[Injection]:
     spec = suite.injections
     combos = list(itertools.product(spec["goals"], spec["placements"], spec["styles"]))
     if task["carrier"] == "screen":
         # A task about the screen can only carry text on the screen.
         combos = [c for c in combos if c[1] == "screen"]
+    elif screen_only_on_screen_task:
+        # An agent reading a log rarely looks at the screen, so a dialog there is seldom seen.
+        combos = [c for c in combos if c[1] != "screen"]
     rng.shuffle(combos)
-    chosen = sorted(combos[: spec["per_task"]])
+    chosen = sorted(combos[: per_task or spec["per_task"]])
     out = []
     for goal, placement, style in chosen:
         g = spec["goals"][goal]
@@ -106,7 +112,14 @@ def injections_for(suite: Suite, canaries: dict, task: dict, rng: random.Random)
 def episodes(suite: Suite, config: dict) -> list[Episode]:
     rng = random.Random(suite.injections.get("seed", 0))
     out: list[Episode] = []
-    per_task = {t["id"]: injections_for(suite, config["canaries"], t, rng) for t in suite.tasks}
+    per_task = {
+        t["id"]: injections_for(
+            suite, config["canaries"], t, rng,
+            per_task=config.get("injections_per_task"),
+            screen_only_on_screen_task=config.get("screen_only_on_screen_task", False),
+        )
+        for t in suite.tasks
+    }
     for model, node, task, condition, repeat in itertools.product(
         config["models"],
         [n["name"] for n in config["nodes"]],

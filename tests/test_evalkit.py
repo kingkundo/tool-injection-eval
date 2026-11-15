@@ -72,6 +72,15 @@ class SuiteTests(unittest.TestCase):
         expected = len(s.tasks) * len(s.conditions) * (1 + per_task)
         self.assertEqual(len(a), expected)
 
+    def test_trimmed_scope(self):
+        s = suite_mod.load()
+        cfg = dict(CONFIG, injections_per_task=8, screen_only_on_screen_task=True)
+        eps = suite_mod.episodes(s, cfg)
+        self.assertEqual(len(eps), len(s.tasks) * len(s.conditions) * 9)
+        for e in eps:
+            if e.injection and e.task_id != "screen-dialog":
+                self.assertNotEqual(e.injection.placement, "screen")
+
     def test_screen_task_only_gets_screen_injections(self):
         s = suite_mod.load()
         eps = suite_mod.episodes(s, CONFIG)

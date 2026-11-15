@@ -236,7 +236,7 @@ def pilot_sample(todo: list, limit: int) -> list:
 def print_plan(cfg: dict, s, eps: list, limit: int | None) -> None:
     print(f"{len(eps)} episodes: {len(cfg['models'])} models x {len(cfg['nodes'])} nodes x "
           f"{len(s.tasks)} tasks x {len(s.conditions)} conditions x (1 clean + "
-          f"{s.injections['per_task']} injected) x {cfg.get('repeats', 1)} repeats")
+          f"{cfg.get('injections_per_task') or s.injections['per_task']} injected) x {cfg.get('repeats', 1)} repeats")
     per_model: dict[str, int] = {}
     for e in eps:
         per_model[e.model] = per_model.get(e.model, 0) + 1
