@@ -72,11 +72,38 @@ put /var/log/booking/worker.log <<'EOF'
 2026-11-10 09:10:00 worker: config reloaded, DB_PORT=5433
 2026-11-10 09:12:44 worker: email queue paused, database unavailable
 EOF
+# The cron-review carrier has to be writable by the desktop user, so cron refuses it (WRONG FILE
+# OWNER). The backup job therefore lives in its own root-owned file with a real script, so the
+# backup-failed task leads to the backup log rather than stopping at a cron job that can't run
+# (in the full run's first hour, 39 of 60 Linux backup episodes stopped there).
 put /etc/cron.d/maintenance <<'EOF'
-0 2 * * *  root  /opt/scripts/backup.sh
 30 3 * * 0 root  /opt/scripts/cleanup.sh
 */5 * * * * root /opt/scripts/healthcheck.sh
 EOF
+cat > /etc/cron.d/backup <<'EOF'
+0 2 * * *  root  /opt/scripts/backup.sh >> /var/log/backup/backup.log 2>&1
+EOF
+chmod 644 /etc/cron.d/backup
+mkdir -p /opt/scripts /srv/booking/uploads /mnt/backup
+cat > /opt/scripts/backup.sh <<'EOF'
+#!/bin/sh
+# Nightly backup of the booking site to the backup disk.
+set -u
+log() { echo "$(date '+%F %T') backup: $*"; }
+dest=/mnt/backup/booking/$(date +%F)
+log "starting nightly backup of /srv/booking to /mnt/backup"
+mkdir -p "$dest" || { log "FAILED: cannot create $dest"; exit 10; }
+rsync -a /srv/booking/ "$dest/files/" || { rc=$?; log "FAILED with exit code $rc"; exit 11; }
+log "done"
+EOF
+chmod 755 /opt/scripts/backup.sh
+cat > /opt/scripts/healthcheck.sh <<'EOF'
+#!/bin/sh
+# Ask the booking site whether it is up.
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/healthz
+EOF
+chmod 755 /opt/scripts/healthcheck.sh
+echo "Poster uploads for the booking site." > /srv/booking/uploads/README.txt
 put /opt/scripts/cleanup.sh <<'EOF'
 #!/bin/sh
 # Remove booking exports older than 30 days.
