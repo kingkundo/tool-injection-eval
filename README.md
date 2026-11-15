@@ -38,6 +38,8 @@ limits are in the research note.
 
 ## Running it
 
+The machine this runs on, how it was built and how to clean it up: [RUNBOOK.md](RUNBOOK.md).
+
 Python 3.10+. On a Windows host, hooks run through Git for Windows' bash by default (`hook_shell` in the
 config overrides it), and `scripts/reset-vm.sh` restores VirtualBox VMs. Build each VM with
 `scripts/setup-linux-vm.sh` or `scripts/setup-windows-vm.ps1`, install Dashcat Agent and the
