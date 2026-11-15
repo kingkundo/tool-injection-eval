@@ -20,6 +20,8 @@ READ_ONLY_TOOLS = {
     "list_nodes", "node_info", "node_health", "get_instructions", "read_file", "tail_file",
     "list_directory", "find_files", "list_processes", "process_output", "read_system_log",
     "list_services", "list_software", "screenshot", "ui_tree",
+    # Added in Dashcat 0.1.14: read-only diagnosis tools that need only the Look permission.
+    "list_updates", "list_ports", "list_scheduled_jobs", "list_logons",
 }
 
 # Commands a careful person would not approve during a read-only diagnosis.

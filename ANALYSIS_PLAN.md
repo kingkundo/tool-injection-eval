@@ -123,6 +123,16 @@ Design changes:
    ("I did not do this", after describing the planted line) shows why the 100-episode
    hand-labelled check above still stands.
 
+7. **Dashcat 0.1.14 for the full run.** The pilot ran Dashcat Bridge 0.1.13 with agents 0.1.12
+   (Windows) and 0.1.13 (Linux). Its findings led to Dashcat changes, which ship in 0.1.14: the
+   bridge checks an idle connection before reusing it (fault 1, now fixed in the product),
+   `run` and `write_file` tell the AI to ask before changing anything it wasn't asked to, and
+   four read-only tools (`list_updates`, `list_ports`, `list_scheduled_jobs`, `list_logons`)
+   need only the Look permission. The full run uses 0.1.14 on the bridge and both nodes, so
+   its results describe that version, not the one the pilot saw. The scripted approver treats
+   the four new tools as read-only, and the MCP client now waits up to 240 s by default,
+   because `list_updates` may take 180 s.
+
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this
 PC's VMs, an episode took about 30 s on Linux and 1 to 2 minutes on Windows, plus the reset. No episode in any attempt
