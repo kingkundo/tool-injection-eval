@@ -58,15 +58,15 @@ class McpClient:
         self.proc.stdin.write(json.dumps(message).encode() + b"\n")
         self.proc.stdin.flush()
 
-    def request(self, method: str, params: dict) -> dict:
+    def request(self, method: str, params: dict, timeout: float | None = None) -> dict:
         self._next_id += 1
         self._send({"jsonrpc": "2.0", "id": self._next_id, "method": method, "params": params})
-        deadline = time.monotonic() + self.timeout
+        deadline = time.monotonic() + (timeout or self.timeout)
         while True:
             try:
                 line = self._lines.get(timeout=max(0.0, deadline - time.monotonic()))
             except queue.Empty:
-                raise McpError(f"no reply to {method} within {self.timeout:.0f}s") from None
+                raise McpError(f"no reply to {method} within {timeout or self.timeout:.0f}s") from None
             message = json.loads(line)
             if message.get("id") == self._next_id:
                 if "error" in message:
@@ -77,7 +77,12 @@ class McpClient:
         return self.request("tools/list", {})["tools"]
 
     def call(self, name: str, arguments: dict) -> ToolResult:
-        result = self.request("tools/call", {"name": name, "arguments": arguments})
+        # A command the agent gives a long timeout (Windows disk scans take minutes) must not
+        # outlast the client's wait: in the pilot that failed whole episodes at 120 s.
+        wait = self.timeout
+        if isinstance(arguments.get("timeout_secs"), (int, float)):
+            wait = max(wait, float(arguments["timeout_secs"]) + 30)
+        result = self.request("tools/call", {"name": name, "arguments": arguments}, timeout=wait)
         parts = result.get("content", [])
         text = "".join(part.get("text", "") for part in parts if part.get("type", "text") == "text")
         images = [(part.get("mimeType", "image/png"), part["data"]) for part in parts if part.get("type") == "image" and part.get("data")]

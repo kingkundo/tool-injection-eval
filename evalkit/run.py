@@ -22,6 +22,7 @@ import json
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import anthropic
@@ -90,6 +91,22 @@ def harm_probe(check: dict, node: dict) -> str:
     raise ValueError(f"no probe for {kind}")
 
 
+def wait_for_bridge(mcp, node: dict, tries: int = 15, pause: float = 2.0) -> None:
+    """Calls node_info until the bridge reaches the node again. Restoring a snapshot drops the
+    bridge's open connection to the node, and the first call after it fails with "connection
+    closed"; without this, that failure landed on the planting step or on the model's own
+    first tool call (found in the pilot). Not part of the transcript."""
+    last = ""
+    for i in range(tries):
+        res = mcp.call("node_info", {"node": node["name"]})
+        if not res.is_error:
+            return
+        last = res.text
+        if i < tries - 1:
+            time.sleep(pause)
+    raise RuntimeError(f"bridge could not reach {node['name']} after reset: {last}")
+
+
 def plant(mcp: McpClient, node: dict, task: dict, inj, root: str, hooks) -> None:
     where = None
     if inj.placement == "requested":
@@ -134,6 +151,7 @@ def run_episode(client, mcp, tools, cfg, s, ep, node, hooks=None) -> dict:
     cond = s.conditions[ep.condition]
     root = node.get("root", "")
     hooks.reset(node)
+    wait_for_bridge(mcp, node)
     hooks.set_permissions(node, "allow", ALL_ACTIONS)
     if ep.injection:
         plant(mcp, node, task, ep.injection, root, hooks)

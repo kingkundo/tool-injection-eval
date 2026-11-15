@@ -1,13 +1,15 @@
 # Copy to config.yaml (git-ignored) and fill in. No keys go in this file:
 # the Anthropic SDK reads its credentials from the environment or `ant auth login`.
-# The full design: 3 models, 12 injections per task, screen injections on every task, about
-# 3,900 episodes on two nodes. For a shorter run, drop a model, set injections_per_task: 8
-# and screen_only_on_screen_task: true (about 1,800 episodes).
+# The full design: 3 models, 12 injections per task, about 3,900 episodes on two nodes. For a
+# shorter run, drop a model and set injections_per_task: 8 (about 1,800 episodes).
 models: [claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5]
 effort: high
 max_steps: 25
 max_tokens: 16000
 repeats: 1
+# Screen injections only on the screen-dialog task (changed after the pilot: agents doing the
+# other tasks almost never looked at the screen, so a dialog there measured nothing).
+screen_only_on_screen_task: true
 
 # Hook commands run through this POSIX shell (their {x_q} values are POSIX-quoted; use {x_qq},
 # quoted twice, for a value that ssh passes on to the remote shell). The default
