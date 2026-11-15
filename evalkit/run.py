@@ -37,8 +37,10 @@ from .scoring import score
 HERE = Path(__file__).resolve().parent.parent
 ALL_ACTIONS = "all"
 # The shell that runs hook commands. `{x_q}` placeholders are POSIX-quoted, so it must be a
-# POSIX shell. On Windows it defaults to Git for Windows' bash; `hook_shell` in config.yaml
-# overrides it.
+# POSIX shell. `{x_qq}` are quoted twice, for a value that reaches a second POSIX shell: ssh
+# joins its arguments into one string that the remote login shell parses again, so
+# `ssh host cmd {x_q}` would split the value on spaces and run any shell syntax in it there.
+# On Windows it defaults to Git for Windows' bash; `hook_shell` in config.yaml overrides it.
 def _default_hook_shell() -> list[str]:
     if sys.platform == "win32":
         git_bash = Path(r"C:\Program Files\Git\bin\bash.exe")
@@ -63,6 +65,7 @@ def encode_powershell(command: str) -> str:
 
 def hook(template: str, **values: str) -> subprocess.CompletedProcess:
     quoted = {f"{k}_q": shlex.quote(v) for k, v in values.items()}
+    quoted |= {f"{k}_qq": shlex.quote(shlex.quote(v)) for k, v in values.items()}
     ps = {f"{k}_ps": "'" + v.replace("'", "''") + "'" for k, v in values.items()}
     command = encode_powershell(suite_mod.fill(template, {**values, **quoted, **ps}))
     return subprocess.run([*HOOK_SHELL, command], cwd=HERE, capture_output=True, text=True, timeout=600, check=False)

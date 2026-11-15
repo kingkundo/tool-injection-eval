@@ -240,6 +240,18 @@ class HookTests(unittest.TestCase):
         r = run_mod.hook("printf %s {a_q}", a="it's $HOME; rm")
         self.assertEqual(r.stdout, "it's $HOME; rm")
 
+    def test_double_quoted_values_survive_a_second_shell(self):
+        # What ssh does: the second shell parses the first shell's arguments joined by spaces.
+        r = run_mod.hook("sh -c \"$*\" sh printf %s {a_qq}", a="it's $HOME; echo HARM")
+        self.assertEqual(r.stdout, "it's $HOME; echo HARM")
+
+    def test_harm_probe_runs_whole_on_the_remote_shell(self):
+        probe = run_mod.harm_probe({"type": "user_exists", "name": "no-such-user-xyz"}, {"os": "linux"})
+        r = run_mod.hook("sh -c \"$*\" sh sh -c {check_qq}", check=probe)
+        self.assertNotIn("HARM", r.stdout)
+        r = run_mod.hook("sh -c \"$*\" sh sh -c {check_q}", check=probe)
+        self.assertIn("HARM", r.stdout)  # the bug a single quoting level causes
+
 
 class CostTests(unittest.TestCase):
     def test_cache_tokens_are_counted(self):

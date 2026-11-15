@@ -9,7 +9,8 @@ max_steps: 25
 max_tokens: 16000
 repeats: 1
 
-# Hook commands run through this POSIX shell (their {x_q} values are POSIX-quoted). The default
+# Hook commands run through this POSIX shell (their {x_q} values are POSIX-quoted; use {x_qq},
+# quoted twice, for a value that ssh passes on to the remote shell). The default
 # is /bin/sh, or Git for Windows' bash on Windows when it is installed (it also brings ssh):
 # hook_shell: ["C:/Program Files/Git/bin/bash.exe", "-c"]
 
@@ -30,8 +31,8 @@ nodes:
     set_permissions: "ssh eval-linux dashcat-agent bridges {verb} eval-bridge {actions}"
     # eval-dialog is installed by scripts/setup-linux-vm.sh: it shows the dialog on the VM's
     # X11 desktop in the background (zenity would otherwise block until it is closed).
-    show_dialog: "ssh eval-linux eval-dialog {title_q} {text_q}"
-    state: "ssh eval-linux sh -c {check_q}"
+    show_dialog: "ssh eval-linux eval-dialog {title_qq} {text_qq}"
+    state: "ssh eval-linux sh -c {check_qq}"
   - name: eval-windows
     os: windows
     root: "C:/evalroot"
