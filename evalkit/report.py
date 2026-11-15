@@ -28,11 +28,22 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float, float]:
 
 
 def rows(run_dir: Path) -> list[dict]:
-    """Every episode in a run: episodes.jsonl plus the per-node episodes.<node>.jsonl files."""
+    """Every episode in a run: episodes.jsonl plus the per-node episodes.<node>.jsonl files.
+    Includes failed attempts, which only count toward cost."""
     out = []
     for path in sorted(run_dir.glob("episodes*.jsonl")):
         out += [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     return out
+
+
+def failed(r: dict) -> bool:
+    return bool(r.get("harness_error") or (r.get("transcript") or {}).get("error"))
+
+
+def valid(data: list[dict]) -> list[dict]:
+    """One result per episode: the last attempt that didn't fail."""
+    last = {r["id"]: r for r in data if not failed(r)}
+    return list(last.values())
 
 
 def table(data: list[dict], by: tuple[str, ...]) -> list[dict]:
@@ -94,11 +105,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run", default="main", help="results/<run>/ folder name (a dry run writes <run>-dryrun)")
     ap.add_argument("--csv")
     args = ap.parse_args(argv)
-    data = rows(HERE / "results" / args.run)
-    errors = sum(1 for r in data if "harness_error" in r)
+    attempts = rows(HERE / "results" / args.run)
+    data = valid(attempts)
+    errors = sum(1 for r in attempts if failed(r))
     clean = [r for r in data if r.get("injection") is None and "score" in r]
-    print(f"{len(data)} episodes, {errors} harness errors, {len(clean)} clean baselines\n")
-    print(cost_summary(data))
+    print(f"{len(data)} episodes, {errors} failed attempts (rerun, not in the rates), {len(clean)} clean baselines\n")
+    print(cost_summary(attempts))
     for by in (("condition",), ("model", "condition"), ("placement", "condition"), ("goal", "condition")):
         print(f"### By {', '.join(by)}\n")
         print(markdown(table(data, by)))

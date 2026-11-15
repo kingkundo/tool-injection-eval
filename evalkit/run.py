@@ -173,7 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--config", default=str(HERE / "config.yaml"))
     ap.add_argument("--run", default="main", help="results/<run>/ folder name")
-    ap.add_argument("--limit", type=int, help="stop after this many new episodes (pilot)")
+    ap.add_argument("--limit", type=int, help="run a fixed, spread-out sample of this many episodes (the pilot); a rerun finishes the same sample")
     ap.add_argument("--plan", action="store_true", help="print the episode count and cost forecast, and exit")
     ap.add_argument("--budget", type=float, help="stop once this process's results file has cost this many US dollars")
     ap.add_argument("--node", help="run only this node's episodes, into episodes.<node>.jsonl, so each node "
@@ -203,20 +203,22 @@ def main(argv: list[str] | None = None) -> int:
             return 2
     out = out_dir / (f"episodes.{args.node}.jsonl" if args.node else "episodes.jsonl")
     done = set()
-    if out.exists():
-        done = {json.loads(line)["id"] for line in out.read_text().splitlines() if line.strip()}
     spent = 0.0
     if out.exists():
-        spent = sum(json.loads(line).get("cost_usd") or 0.0 for line in out.read_text().splitlines() if line.strip())
-    todo = [e for e in eps if e.id not in done]
-    if args.limit is not None:
-        todo = pilot_sample(todo, args.limit)
+        saved = [json.loads(line) for line in out.read_text().splitlines() if line.strip()]
+        # A failed episode stays in the file (its cost was spent) but is run again.
+        done = {r["id"] for r in saved if not failure(r)}
+        spent = sum(r.get("cost_usd") or 0.0 for r in saved)
+    # Sample before dropping finished episodes, so a resumed pilot finishes the same sample.
+    chosen = pilot_sample(eps, args.limit) if args.limit is not None else eps
+    todo = [e for e in chosen if e.id not in done]
     print(f"{len(done)} done (${spent:.2f} so far), running {len(todo)}", file=sys.stderr)
 
     nodes = {n["name"]: n for n in cfg["nodes"]}
     client = anthropic.Anthropic()
     with McpClient(cfg["bridge"]["command"]) as mcp, out.open("a") as f:
         tools = mcp.list_tools()
+        api_failures = 0
         for i, ep in enumerate(todo, 1):
             try:
                 row = run_episode(client, mcp, tools, cfg, s, ep, nodes[ep.node])
@@ -226,10 +228,32 @@ def main(argv: list[str] | None = None) -> int:
             f.flush()
             spent += row.get("cost_usd") or 0.0
             print(f"[{i}/{len(todo)}] ${spent:.2f} {ep.id} {row.get('score', row.get('harness_error'))}", file=sys.stderr)
+            api_error = (row.get("transcript") or {}).get("error", "")
+            api_failures = api_failures + 1 if api_error else 0
+            if api_error and (fatal_api_error(api_error) or api_failures >= MAX_API_FAILURES):
+                print(f"stopping: the Claude API failed ({api_error}); fix it, then rerun to resume", file=sys.stderr)
+                return 3
             if args.budget is not None and spent >= args.budget:
                 print(f"stopping: ${spent:.2f} spent, budget ${args.budget:.2f}; rerun to resume", file=sys.stderr)
                 break
     return 0
+
+
+# API failures that every later call would hit too, so the run stops instead of burning
+# through the remaining episodes: no credit, a bad key, no permission, a missing model.
+MAX_API_FAILURES = 3
+
+
+def fatal_api_error(error: str) -> bool:
+    m = re.match(r"api (\d+)", error)
+    status = int(m.group(1)) if m else 0
+    return status in (401, 402, 403, 404) or "credit balance" in error.lower()
+
+
+def failure(row: dict) -> str:
+    """Why an episode has no valid result (empty if it has one). Failed episodes are rerun
+    and left out of the rates."""
+    return row.get("harness_error") or (row.get("transcript") or {}).get("error", "")
 
 
 def pilot_sample(todo: list, limit: int) -> list:

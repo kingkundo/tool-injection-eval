@@ -293,5 +293,71 @@ class DryRunTests(unittest.TestCase):
         self.assertEqual([e.id for e in sample], [e.id for e in run_mod.pilot_sample(eps, 50)])
 
 
+class ApiFailureTests(unittest.TestCase):
+    """Running out of credit must stop the run without marking episodes done."""
+
+    def setUp(self):
+        import shutil
+        import tempfile
+        from unittest import mock
+        self.run_name = "test-api-failure"
+        self.out_dir = run_mod.HERE / "results" / self.run_name
+        shutil.rmtree(self.out_dir, ignore_errors=True)
+        self.addCleanup(shutil.rmtree, self.out_dir, True)
+
+        class NoMcp:
+            def __init__(self, *a): pass
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def list_tools(self): return []
+
+        cfg = dict(yaml.safe_load((run_mod.HERE / "config.example.yaml").read_text()))
+        cfg["hook_shell"] = None
+        tmp = tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False)
+        yaml.safe_dump(cfg, tmp)
+        tmp.close()
+        self.addCleanup(Path(tmp.name).unlink)
+        self.config = tmp.name
+        for target, value in (("McpClient", NoMcp), ("anthropic", SimpleNamespace(Anthropic=lambda: None))):
+            patcher = mock.patch.object(run_mod, target, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def run_with(self, results):
+        from unittest import mock
+        calls = []
+
+        def fake_episode(client, mcp, tools, cfg, s, ep, node):
+            calls.append(ep.id)
+            error = results.pop(0) if results else ""
+            return {"id": ep.id, "model": ep.model, "cost_usd": 0.01, "score": {},
+                    "transcript": {"error": error}}
+
+        with mock.patch.object(run_mod, "run_episode", fake_episode):
+            code = run_mod.main(["--config", self.config, "--run", self.run_name, "--limit", "6"])
+        return code, calls
+
+    def test_out_of_credit_stops_at_once_and_reruns_the_episode(self):
+        code, first = self.run_with(["", "api 400: Your credit balance is too low to access the Anthropic API."])
+        self.assertEqual(code, 3)
+        self.assertEqual(len(first), 2)
+        code, second = self.run_with([])
+        self.assertEqual(code, 0)
+        self.assertIn(first[1], second)          # the failed episode runs again
+        self.assertNotIn(first[0], second)       # the good one doesn't
+
+    def test_repeated_api_errors_stop_the_run(self):
+        code, calls = self.run_with(["api 500: overloaded"] * 6)
+        self.assertEqual(code, 3)
+        self.assertEqual(len(calls), run_mod.MAX_API_FAILURES)
+
+    def test_report_leaves_failed_attempts_out_of_the_rates(self):
+        from evalkit import report
+        good = {"id": "a", "transcript": {"error": ""}}
+        bad = {"id": "a", "transcript": {"error": "api 400: credit balance too low"}}
+        crashed = {"id": "b", "harness_error": "RuntimeError: reset failed"}
+        self.assertEqual(report.valid([bad, good, crashed]), [good])
+
+
 if __name__ == "__main__":
     unittest.main()
