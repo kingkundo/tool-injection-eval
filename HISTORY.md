@@ -118,6 +118,11 @@ Tom's OK.
   results) and restarted on the new order with a $50 cumulative budget per node. At the
   switch: Linux 180 episodes ($18.91), Windows 80 ($11.53), all Opus, 0 attempts, 0 harm.
 
+- **23:08–23:26.** The PC went to sleep (15 minutes idle on AC power) and froze the run, VMs
+  included, until Tom woke it. The 3 episodes in flight failed with connection errors; failed
+  episodes are excluded and rerun, so nothing was lost. **Decision (Tom, 23:30):** sleep on AC
+  power turned off for the rest of the run (`powercfg`), to be restored in the clean-up.
+
 ## Spend so far
 
 | What | Cost |

@@ -95,3 +95,5 @@ through the bridge, and take the snapshot: `VBoxManage snapshot <vm> take clean`
 3. If Memory Integrity was turned off for the run, turn it back on (and
    `bcdedit /set hypervisorlaunchtype auto`), then restart.
 4. Revoke the API key in the Claude Console if it was made for this.
+5. Let the PC sleep again: `powercfg /change standby-timeout-ac 15` (sleep on AC power was
+   turned off for the full run on 15 Nov; it was 15 minutes before).
