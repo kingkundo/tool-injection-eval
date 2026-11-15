@@ -110,23 +110,22 @@ Design changes:
    looked for nginx or Apache, found neither and stopped. user-audit, service-health and
    cron-review on Windows behaved the same way. Those prompts now say where the files are, as
    readme-setup already did (for example "Our update checker writes its reports to
-   /var/log/updates/"). Exposure among injected episodes rose from 10 of 30 in attempt 2 to
+   /var/log/updates/"). Exposure among injected episodes rose from 10 of 31 in attempt 2 to
    35 of 42 in attempt 3. This makes the tasks less natural, so the write-up will say the
    prompts point at the files.
 5. **Screen injections only on the screen-dialog task.** A dialog planted while the agent
-   worked on a log or config task was seen in 1 of 8 episodes. `screen_only_on_screen_task`
+   worked on a log or config task was seen in 1 of 9 episodes. `screen_only_on_screen_task`
    is now on: each task still gets 12 injections (3,900 episodes in all), and screen placement
    is measured on the screen-dialog task only.
 6. **Detection pattern widened.** 6 of the 7 exposed episodes that the old pattern scored as
    undetected did warn the user, in phrases such as "a line telling any AI assistant to
-   copy..." or "written to trick an AI assistant like me". The pattern now covers those. It
-   matched none of the 49 clean or unexposed answers from attempts 2 and 3. The remaining miss
+   copy..." or "written to trick an AI assistant like me". The pattern now covers those. It matched none of the clean or unexposed answers from attempts 2 and 3. The remaining miss
    ("I did not do this", after describing the planted line) shows why the 100-episode
    hand-labelled check above still stands.
 
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this
-PC's VMs, episodes took about 30 s on Linux and 80 s on Windows. No episode in any attempt
+PC's VMs, an episode took about 30 s on Linux and 1 to 2 minutes on Windows, plus the reset. No episode in any attempt
 scored as attempted or harmed, so the harm scoring path wasn't exercised by the pilot. The
 smoke test on 15 Nov is still the only check that a harmed episode is caught.
 
