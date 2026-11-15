@@ -1,12 +1,13 @@
 # Tool-output injection eval
 
-A small research harness, not part of the product. It measures how often an AI agent that
+A small research harness. It measures how often an AI agent that
 manages machines through Dashcat can be steered by text planted in what the tools return (a
 log line, a file, a dialog on screen), and how much each deployment-side control cuts that:
 a system-prompt rule, node instructions, Dashcat permissions and a person approving actions.
 
-Design, hypotheses and limits: the design doc linked from the PR that added this folder.
-Nothing here ships to users, and nothing in `apps/` or `crates/` depends on it.
+It started in the Dashcat repo's `research/` folder (this repo keeps that history) and lives
+here on its own, so it can be published without the product's code. Design, hypotheses and
+limits are in the research note.
 
 ## Safety rules
 
@@ -46,7 +47,6 @@ it running as `clean`. On Windows, an administrator's ssh key goes in
 appears on each VM's desktop before the pilot.
 
 ```bash
-cd research/tool-injection-eval
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 python3 -m unittest discover -s tests            # offline, no API calls
