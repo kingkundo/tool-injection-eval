@@ -6,6 +6,7 @@
 # Take the snapshot while the VM is running, signed in and with Dashcat Agent up: restoring a
 # running snapshot resumes in seconds instead of booting. VirtualBox's guest additions set the
 # guest's clock on resume; without them the node may refuse a bridge pass from "the future".
+# The readiness check runs `exit 0`, which both sh and Windows cmd understand.
 # Set VBOXMANAGE when VBoxManage isn't on PATH (Windows: the VirtualBox install folder).
 set -euo pipefail
 
@@ -27,7 +28,7 @@ done
 "$vbox" startvm "$vm" --type headless >/dev/null
 
 for _ in $(seq 1 90); do
-  if ssh -o BatchMode=yes -o ConnectTimeout=2 "$host" true >/dev/null 2>&1; then
+  if ssh -o BatchMode=yes -o ConnectTimeout=2 "$host" exit 0 >/dev/null 2>&1; then
     exit 0
   fi
   sleep 2

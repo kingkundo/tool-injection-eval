@@ -6,8 +6,8 @@
 # It copies results\ to -Keep first, then deletes the VMs and their disks, the ISOs, the
 # harness checkout and its Python environment, the eval ssh key and its known_hosts lines, and
 # the ANTHROPIC_API_KEY user variable; with -Uninstall it also removes VirtualBox and Python
-# 3.12. It never touches Dashcat itself: sign the bridge out and delete the eval team in
-# Dashcat Dashboard by hand.
+# 3.12. It never touches Dashcat itself: remove the eval nodes in Dashcat Dashboard and sign
+# the bridge out by hand.
 param(
     [string]$Root = 'D:\eval-vms',
     [string]$Keep = 'D:\eval-results',
@@ -17,7 +17,7 @@ param(
 $ErrorActionPreference = 'Continue'
 $vbm = 'C:\Program Files\Oracle\VirtualBox\VBoxManage.exe'
 
-$results = Join-Path $Root 'repo\research\tool-injection-eval\results'
+$results = Join-Path $Root 'harness\results'
 if (Test-Path $results) {
     New-Item -ItemType Directory -Force -Path $Keep | Out-Null
     Copy-Item -Recurse -Force "$results\*" $Keep
@@ -64,4 +64,4 @@ if ($Uninstall) {
         Where-Object { $_.DisplayName -match '^Python 3\.12\.\d+ \(64-bit\)$' -and $_.QuietUninstallString }
     foreach ($b in $bundle) { cmd /c $b.QuietUninstallString }
 }
-'Done. In Dashcat Dashboard: delete the eval team. On this PC: dashcat-bridge logout.'
+'Done. In Dashcat Dashboard: remove the eval-linux and eval-windows nodes. On this PC: dashcat-bridge logout.'
