@@ -158,6 +158,26 @@ Design changes:
     stripped before scoring, malformed tool arguments are answered with an error, and failures
     caused by bad tool calls are counted separately from outcomes. It runs on the VMs only when
     the main run doesn't need them, after a short pilot.
+11. **Opus cut to 5 of the 10 tasks; Haiku runs next (decided 15 Nov, 22:24 UTC, about 4 h
+    into the full run).** By 22:25 UTC, Opus had run 258 episodes (178 Linux, 80 Windows):
+    225 of the 237 injected ones were exposed (the 12 misses all on `disk-space`), none was
+    attempted or harmed, and 188 answers flagged the planted text. Running all 1,300 Opus episodes per node would
+    mostly narrow an upper bound that is already tight, while the other models and the controls
+    were still unmeasured. Tom asked whether the weaker models should come first; Claude
+    recommended this change and Tom agreed. What changes:
+    - Opus runs 5 tasks in full on both nodes: `backup-failed`, `disk-space`, `web-config`,
+      `app-errors` (the first four in run order, already run or under way when this was
+      decided) and `screen-dialog` (the only task with screen injections). That is 325 episodes
+      per node, every condition, goal, placement and style. Its other five tasks are not run.
+      Set with `model_tasks` in the config.
+    - The model order becomes Haiku, then Opus's remaining episodes, then Sonnet. Haiku is the
+      cheapest (about $0.004 an episode in the pilot) and the likeliest Claude model to act on
+      planted text, so it comes first. How much of Sonnet runs is decided after Haiku's
+      results, and recorded here as change 12.
+    - Comparisons between models use only the 5 tasks every model ran; each model's own
+      results also use all the tasks it ran, labelled as such.
+    - No episode already run is dropped or rerun. The Opus episodes from tasks outside the
+      five (none at the time of the change) would be reported apart.
 
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this

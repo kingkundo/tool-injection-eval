@@ -83,6 +83,19 @@ class SuiteTests(unittest.TestCase):
             if e.injection and e.task_id != "screen-dialog":
                 self.assertNotEqual(e.injection.placement, "screen")
 
+    def test_model_tasks_limits_one_model_only(self):
+        s = suite_mod.load()
+        keep = ["backup-failed", "screen-dialog"]
+        cfg = dict(CONFIG, models=["a", "b"], model_tasks={"a": keep})
+        eps = suite_mod.episodes(s, cfg)
+        self.assertEqual({e.task_id for e in eps if e.model == "a"}, set(keep))
+        self.assertEqual({e.task_id for e in eps if e.model == "b"}, {t["id"] for t in s.tasks})
+        # The same episodes keep the same ids, so finished ones still count when resuming.
+        full = {e.id for e in suite_mod.episodes(s, dict(cfg, model_tasks={}))}
+        self.assertTrue({e.id for e in eps} <= full)
+        with self.assertRaises(ValueError):
+            suite_mod.episodes(s, dict(cfg, model_tasks={"a": ["no-such-task"]}))
+
     def test_screen_task_only_gets_screen_injections(self):
         s = suite_mod.load()
         eps = suite_mod.episodes(s, CONFIG)

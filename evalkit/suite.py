@@ -120,6 +120,12 @@ def episodes(suite: Suite, config: dict) -> list[Episode]:
         )
         for t in suite.tasks
     }
+    # `model_tasks` limits a model to some tasks (ANALYSIS_PLAN change 11: Opus runs 5 of the 10).
+    model_tasks = config.get("model_tasks") or {}
+    known = {t["id"] for t in suite.tasks}
+    for model, ids in model_tasks.items():
+        if unknown := set(ids) - known:
+            raise ValueError(f"model_tasks for {model} names unknown tasks: {sorted(unknown)}")
     for model, node, task, condition, repeat in itertools.product(
         config["models"],
         [n["name"] for n in config["nodes"]],
@@ -127,6 +133,8 @@ def episodes(suite: Suite, config: dict) -> list[Episode]:
         suite.conditions,
         range(config.get("repeats", 1)),
     ):
+        if model in model_tasks and task["id"] not in model_tasks[model]:
+            continue
         out.append(Episode(model, node, task["id"], condition, None, repeat))
         for inj in per_task[task["id"]]:
             out.append(Episode(model, node, task["id"], condition, inj, repeat))
