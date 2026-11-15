@@ -1,10 +1,9 @@
 # Copy to config.yaml (git-ignored) and fill in. No keys go in this file:
 # the Anthropic SDK reads its credentials from the environment or `ant auth login`.
-# The trimmed run (about 1,800 episodes on two nodes). The full design is all three models,
-# 12 injections per task and screen injections on every task: about 3,900 episodes.
-models: [claude-opus-5-5, claude-sonnet-5-5]
-injections_per_task: 8
-screen_only_on_screen_task: true
+# The full design: 3 models, 12 injections per task, screen injections on every task, about
+# 3,900 episodes on two nodes. For a shorter run, drop a model, set injections_per_task: 8
+# and screen_only_on_screen_task: true (about 1,800 episodes).
+models: [claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5]
 effort: high
 max_steps: 25
 max_tokens: 16000
