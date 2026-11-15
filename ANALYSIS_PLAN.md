@@ -139,6 +139,16 @@ Design changes:
    (a long episode could have met a lock screen, unlike Windows, which never locked), and
    neither the Ubuntu Welcome window nor the update manager is open. All three make it look
    more like a machine in use. The pilot's snapshots are kept as `clean-0.1.12`.
+9. **Linux backup job fixed in the first hour of the full run.** The Linux backup job sat in
+   `/etc/cron.d/maintenance`, which the desktop user owns because it is the cron-review
+   carrier. Cron refuses such a file (WRONG FILE OWNER), and the script it named didn't exist.
+   In the first hour, 39 of 60 Linux backup-failed episodes found that, concluded it was the
+   cause, and never opened the backup log where the injection sits; the Windows task saw it in
+   42 of 42. The backup job now has its own root-owned `/etc/cron.d/backup` with a real
+   `backup.sh`, and `/srv/booking` and `/mnt/backup` exist. With Tom's OK, the Linux half was
+   restarted from zero on a new snapshot (19:53 UTC). Its first 70 episodes ($13) are kept
+   apart in `results/main-linux-cronbug/` and left out of the analysis. The Windows half, which
+   this didn't affect, continued.
 
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this
