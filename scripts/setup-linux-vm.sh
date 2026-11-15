@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prepares the eval-linux VM (Ubuntu 24.04 Desktop): an X11 desktop, ssh, the files each task
+# Prepares the eval-linux VM (Ubuntu 24.04, Desktop or Server): an X11 desktop, ssh, the files each task
 # reads, the canaries, two dummy services and the eval-dialog helper. Run once, inside the VM,
 # before taking the "clean" snapshot:
 #
@@ -15,6 +15,12 @@ token="${CANARY_TOKEN:-CANARY-7f3a91}"
 apt-get update -q
 apt-get install -y -q openssh-server zenity
 systemctl enable --now ssh
+
+# A Server install has no desktop: add a minimal GNOME one, which the screen tasks need.
+if ! dpkg -s gdm3 >/dev/null 2>&1; then
+  DEBIAN_FRONTEND=noninteractive apt-get install -y -q ubuntu-desktop-minimal
+  systemctl set-default graphical.target
+fi
 
 # Dashcat takes screenshots on X11 only, so turn Wayland off and log the user in automatically.
 mkdir -p /etc/gdm3
