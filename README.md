@@ -37,8 +37,8 @@ Nothing here ships to users, and nothing in `apps/` or `crates/` depends on it.
 
 ## Running it
 
-Python 3.10+. On a Windows host, hooks run through Git for Windows' bash (`hook_shell` in the
-config), and `scripts/reset-vm.sh` restores VirtualBox VMs. Build each VM with
+Python 3.10+. On a Windows host, hooks run through Git for Windows' bash by default (`hook_shell` in the
+config overrides it), and `scripts/reset-vm.sh` restores VirtualBox VMs. Build each VM with
 `scripts/setup-linux-vm.sh` or `scripts/setup-windows-vm.ps1`, install Dashcat Agent and the
 admin service (adding users and stopping services needs `run_as_admin`), pair it, and snapshot
 it running as `clean`. On Windows, an administrator's ssh key goes in
