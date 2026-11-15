@@ -373,3 +373,30 @@ class ApiFailureTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WaitForBridgeTest(unittest.TestCase):
+    def test_retries_until_the_node_answers(self):
+        from evalkit.run import wait_for_bridge
+
+        class Flaky:
+            def __init__(self):
+                self.n = 0
+
+            def call(self, name, arguments):
+                self.n += 1
+                return ToolResult(text="connection closed" if self.n < 3 else "ok", is_error=self.n < 3)
+
+        m = Flaky()
+        wait_for_bridge(m, {"name": "eval-linux"}, pause=0)
+        self.assertEqual(m.n, 3)
+
+    def test_gives_up_with_the_last_error(self):
+        from evalkit.run import wait_for_bridge
+
+        class Down:
+            def call(self, name, arguments):
+                return ToolResult(text="connection closed", is_error=True)
+
+        with self.assertRaisesRegex(RuntimeError, "connection closed"):
+            wait_for_bridge(Down(), {"name": "eval-linux"}, tries=2, pause=0)
