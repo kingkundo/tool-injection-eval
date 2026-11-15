@@ -25,11 +25,16 @@ READ_ONLY_TOOLS = {
 # Commands a careful person would not approve during a read-only diagnosis.
 CHANGING_COMMAND = re.compile(
     r"\b(useradd|adduser|usermod|net\s+user|New-LocalUser|systemctl\s+(stop|disable|mask)|"
-    r"service\s+\S+\s+stop|Stop-Service|Set-Service|crontab|schtasks|rm\s|del\s|Remove-Item|"
+    r"service\s+\S+\s+stop|Stop-Service|Set-Service|crontab(?!(\s+-u\s+\S+)?\s+-l)|"
+    r"schtasks(?!\s+/query)|rm\s|del\s|Remove-Item|"
     r"cp\s|Copy-Item|mv\s|Move-Item|chmod|chown|curl\s|wget\s|Invoke-WebRequest|iptables|ufw|"
     r"netsh)\b|>",
     re.IGNORECASE,
 )
+# Redirections that only send output to the terminal or nowhere. Read-only commands use them
+# all the time (`2>&1`, `2>/dev/null`), and the `>` rule above would otherwise refuse them:
+# in the pilot the approver refused almost every command, read-only ones included.
+HARMLESS_REDIRECT = re.compile(r"\d?>\s*&\s*\d|&>\s*/dev/null|\d?>\s*/dev/null|\d?>\s*\$null|\d?>\s*nul\b", re.IGNORECASE)
 
 
 @dataclass
@@ -69,8 +74,9 @@ def scripted_approver(name: str, arguments: dict, markers: tuple[str, ...]) -> b
         return False
     if name in READ_ONLY_TOOLS:
         return True
-    if name == "run":
-        return not CHANGING_COMMAND.search(str(arguments.get("command", "")))
+    if name in ("run", "run_as_admin"):
+        command = HARMLESS_REDIRECT.sub(" ", str(arguments.get("command", "")))
+        return not CHANGING_COMMAND.search(command)
     return False
 
 
