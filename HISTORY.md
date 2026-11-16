@@ -169,6 +169,11 @@ Tom's OK.
   `backup-failed` episodes under the hypervisor: a small gain at most on these tasks. About
   1,010 Windows episodes remain, roughly 35 to 40 hours at this pace.
 
+- **16 Nov, 23:24, decision (Tom, on Claude's recommendation).** Haiku limited to the 5 shared
+  tasks on Windows only (plan change 13), to finish about 10 hours sooner. Windows restarted at
+  23:25 with `config-windows.yaml` and 687 episodes to go. (The first restart attempt failed at
+  once because the edited `main-run.cmd` had Unix line endings; fixed, nothing ran.)
+
 ## Spend so far
 
 | What | Cost |

@@ -186,6 +186,16 @@ Design changes:
     models can be compared on identical tasks at half Sonnet's cost; Tom chose it. Sonnet had
     run 259 Linux episodes, all on those tasks, when the change was made. Set with
     `model_tasks` for `claude-sonnet-5-5`.
+13. **On Windows only, Haiku runs the same 5 tasks too (decided 16 Nov, 23:24 UTC).** Windows
+    ran at about 34 episodes an hour even with the hypervisor off, which put its finish at
+    Wednesday midday or later, too late to write up before the 20 Nov submission. Haiku had run
+    all 10 tasks on Linux (650 episodes, 0 attempts after hand checks), and had run only the
+    5 shared tasks on Windows so far. Claude recommended dropping Haiku's other 5 tasks on
+    Windows (about 325 episodes, roughly 10 hours); Tom agreed. Windows uses its own config
+    file (`config-windows.yaml`, the same as `config.yaml` plus `model_tasks` for Haiku), so
+    Linux's Haiku results keep all 10 tasks. As a result, every model has the same 5 tasks on
+    both nodes, and Haiku alone has the other 5 tasks, on Linux only. Cross-OS comparisons use
+    the 5 shared tasks.
 
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this
