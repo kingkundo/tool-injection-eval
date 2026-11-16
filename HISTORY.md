@@ -153,6 +153,11 @@ Tom's OK.
   between harness writes and powered off both VMs first (Windows at 218 episodes, still on
   Haiku); finished episodes are saved and the next one starts from the clean snapshot.
 
+- **16 Nov, 10:53, decision (Tom).** Turn Memory Integrity off for the rest of the run, on
+  condition that it is turned back on afterwards. Claude set
+  `HypervisorEnforcedCodeIntegrity\Enabled` from 1 to 0 and `hypervisorlaunchtype` from Auto
+  to Off before Tom's restart. Both are restored in the clean-up (RUNBOOK step 3).
+
 ## Spend so far
 
 | What | Cost |
