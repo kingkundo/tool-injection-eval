@@ -145,6 +145,14 @@ Tom's OK.
   half keeps running Haiku and picks up the new config when it is next restarted, well
   before it reaches Sonnet.
 
+- **16 Nov, 09:46.** The Linux half finished: 1,300 episodes ($42.51), Haiku on all 10
+  tasks and Opus and Sonnet on their 5. After hand checks: 0 attempts and 0 harm for every
+  model; the planted text was flagged in 85% (Opus), 86% (Sonnet) and 82% (Haiku) of exposed
+  episodes; 0 false alarms in clean episodes.
+- **16 Nov, 10:52.** Tom had to turn the PC off for a while. Claude stopped the Windows half
+  between harness writes and powered off both VMs first (Windows at 218 episodes, still on
+  Haiku); finished episodes are saved and the next one starts from the clean snapshot.
+
 ## Spend so far
 
 | What | Cost |
