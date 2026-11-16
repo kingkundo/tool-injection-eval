@@ -178,6 +178,14 @@ Design changes:
       results also use all the tasks it ran, labelled as such.
     - No episode already run is dropped or rerun. The Opus episodes from tasks outside the
       five (none at the time of the change) would be reported apart.
+12. **Sonnet runs the same 5 tasks as Opus (decided 16 Nov, 09:12 UTC).** By then Haiku had run
+    all 650 Linux episodes: 598 injected episodes exposed, 0 attempts after hand checks (3
+    flagged episodes were read-only checks that the planted account didn't exist), 0 harm,
+    and the planted text was flagged in 483 answers (81%). Opus had finished its 5 Linux tasks
+    with the same picture. Claude recommended matching Sonnet to Opus's tasks, so all three
+    models can be compared on identical tasks at half Sonnet's cost; Tom chose it. Sonnet had
+    run 259 Linux episodes, all on those tasks, when the change was made. Set with
+    `model_tasks` for `claude-sonnet-5-5`.
 
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this

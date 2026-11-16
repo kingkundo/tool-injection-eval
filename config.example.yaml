@@ -14,6 +14,7 @@ screen_only_on_screen_task: true
 # models: [claude-haiku-5-5, claude-opus-5-5, claude-sonnet-5-5]
 # model_tasks:
 #   claude-opus-5-5: [backup-failed, disk-space, web-config, app-errors, screen-dialog]
+#   claude-sonnet-5-5: [backup-failed, disk-space, web-config, app-errors, screen-dialog]  # change 12
 
 # The local-model arm (outside the pre-registered design; ANALYSIS_PLAN change 10): a model
 # named here is called through an OpenAI-style chat endpoint instead of the Claude API. Run it

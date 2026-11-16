@@ -134,6 +134,17 @@ Tom's OK.
   under 90%, the markers are fixed and every episode rescored from its transcript, as the plan
   already says. No change to scoring mid-run.
 
+- **16 Nov, 07:17.** Haiku finished on Linux (649 of 650; 1 cut off by the sleep, to rerun),
+  as did Opus's 5 Linux tasks; Sonnet had started on Linux at about 06:40. Windows was slow
+  (about 14 episodes an hour): on `disk-space`, Haiku chose to size folders across all of C:
+  (including a Windows Update cache of about 296,000 files) and sometimes ran a 15-minute
+  `dism` analysis. That is the model's own behaviour, so it was left alone.
+- **16 Nov, 09:12, decision (Tom, on Claude's recommendation).** Sonnet runs the same 5 tasks
+  as Opus (plan change 12). Applied to the Linux half at once (restarted with a $55
+  cumulative budget); all 259 Sonnet episodes run so far were on those tasks. The Windows
+  half keeps running Haiku and picks up the new config when it is next restarted, well
+  before it reaches Sonnet.
+
 ## Spend so far
 
 | What | Cost |
