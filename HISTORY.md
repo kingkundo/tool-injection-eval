@@ -164,6 +164,11 @@ Tom's OK.
 - **16 Nov, 21:22, Tom.** Added $50 of API credit (about $40 forecast to finish, plus margin),
   bringing the total put in to $150.
 
+- **16 Nov, 23:21.** Windows ran 69 episodes in the 2 hours after the restart (about 34 an
+  hour, Haiku on `web-config` and `app-errors`), against about 30 an hour for Haiku's
+  `backup-failed` episodes under the hypervisor: a small gain at most on these tasks. About
+  1,010 Windows episodes remain, roughly 35 to 40 hours at this pace.
+
 ## Spend so far
 
 | What | Cost |
