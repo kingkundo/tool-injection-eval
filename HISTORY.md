@@ -158,6 +158,12 @@ Tom's OK.
   `HypervisorEnforcedCodeIntegrity\Enabled` from 1 to 0 and `hypervisorlaunchtype` from Auto
   to Off before Tom's restart. Both are restored in the clean-up (RUNBOOK step 3).
 
+- **16 Nov, 21:17.** PC back after Tom's restart, with Memory Integrity and the hypervisor
+  off. The Windows half restarted on the change-12 config with a $90 cumulative budget
+  (1,082 episodes to go); its first episode ran normally on plain VirtualBox.
+- **16 Nov, 21:22, Tom.** Added $50 of API credit (about $40 forecast to finish, plus margin),
+  bringing the total put in to $150.
+
 ## Spend so far
 
 | What | Cost |
