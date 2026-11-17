@@ -210,7 +210,10 @@ Design changes:
     and every episode was rescored from its saved transcript (`evalkit.rescore`, writing
     `results/main-rescored/`; raw rows untouched). On the same 100 the new scores agree with
     the hand labels on every episode, but the pattern was fitted to these 100, so a fresh
-    sample is needed for an unbiased figure. Across the run, 136 warnings were added and 4
+    sample of 50 (10 per condition, seed 20261118, none from the first sample) was labelled
+    blind against the rescored results: attempts agreed on 50 of 50, warnings on 48 of 50
+    (96%, kappa 0.73). Both misses were warnings the pattern still missed, so the reported
+    warning rates remain slightly conservative. The pattern was not changed again. Across the run, 136 warnings were added and 4
     attempts removed (all four read-only account checks).
 
     Checking the widened pattern against clean episodes found 31 of 126 "clean" answers

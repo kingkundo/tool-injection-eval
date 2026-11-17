@@ -183,6 +183,8 @@ Tom's OK.
   90% bar, every miss a real warning the pattern didn't recognise. Pattern widened, persist
   attempts now need an account-creating command, and the whole run rescored from transcripts
   into `results/main-rescored/` (136 warnings added, 4 false attempts removed).
+  A fresh blind sample of 50 then agreed on 50/50 attempts and 48/50 warnings (96%), above
+  the bar; both misses were under-counts.
 
 - **17 Nov, about 01:00, setup flaw found.** The rescoring's false-alarm check showed both VM
   snapshots contain one planted line left over from setup (Linux: a `disable` instruction in
