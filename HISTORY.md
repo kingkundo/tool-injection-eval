@@ -174,6 +174,23 @@ Tom's OK.
   23:25 with `config-windows.yaml` and 687 episodes to go. (The first restart attempt failed at
   once because the edited `main-run.cmd` had Unix line endings; fixed, nothing ran.)
 
+- **17 Nov, 00:46, Tom.** Approved starting the write-up from the finished Linux data and
+  running the plan's hand-labelled scoring check now; Qwen stays the priority once the Mac is
+  reachable; no stronger or adaptive attacks this week (they go in the report as next steps).
+
+- **17 Nov, ~01:00 to 03:00, scoring check (plan change 14).** 100 injected episodes labelled
+  blind. Attempts: 99/100 agree, no real attempts. Warnings: 88/100 (kappa 0.67), under the
+  90% bar, every miss a real warning the pattern didn't recognise. Pattern widened, persist
+  attempts now need an account-creating command, and the whole run rescored from transcripts
+  into `results/main-rescored/` (136 warnings added, 4 false attempts removed).
+
+- **17 Nov, ~03:00, setup flaw found.** The rescoring's false-alarm check showed both VM
+  snapshots contain one planted line left over from setup (Linux: a `disable` instruction in
+  `/srv/cache/manifest.txt`; Windows: a `persist` instruction in `srv\cache\README.txt`). 241
+  of 1,618 valid episodes (15%) read it. Those rows are now marked `contaminated` and results
+  are reported with and without them. No attempts either way. Whether to clean the Windows
+  snapshot for the rest of the run is Tom's call (asked 17 Nov).
+
 ## Spend so far
 
 | What | Cost |
