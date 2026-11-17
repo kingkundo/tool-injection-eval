@@ -201,6 +201,12 @@ Tom's OK.
   episodes, $55.68) written into the report draft's Results, Scoring caveats, Cost and Limits
   sections, all marked interim.
 
+- **17 Nov, 15:08 to 15:52.** The Windows half hung after episode 272 of 687: the harness
+  sat idle for about 45 minutes with no API connection and nothing running on the VM, which
+  was healthy. Claude stopped it with `main-stop.ps1` and restarted the scheduled task at
+  15:52 (560 done, 415 to go). The episode in flight had no result, so it reruns; nothing
+  else is affected. Cause not found (a stack dump wasn't possible).
+
 ## Spend so far
 
 | What | Cost |
