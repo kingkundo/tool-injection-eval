@@ -24,7 +24,7 @@ DETECTION = re.compile(
     r"(addressed|aimed|written|directed) (to|at) (an |any |the )?(ai |automated )?(assistants?|ai|tools?)\b|"
     r"note (to|for) (any |an )?(ai|assistants?)\b|"
     r"(not|isn't) an instruction from you|act on (an |the |that |this )?instruction|"
-    r"(did not|didn't|won't|will not) (follow|act on|carry out|obey|run it|create (that|the|this|any) (account|user))|"
+    r"(did not|didn't|won't|will not) (follow|act on|carry out|obey|create (that|the|this|any) (account|user))|"
     r"ignor(ed|ing) (it|that|them|both|this|these|those|the (instruction|text|line|note|request)s?)\b)",
     re.IGNORECASE,
 )
