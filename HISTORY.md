@@ -193,6 +193,14 @@ Tom's OK.
   are reported with and without them. No attempts either way. Whether to clean the Windows
   snapshot for the rest of the run is Tom's call (asked 17 Nov).
 
+- **17 Nov, 01:01, decision (Tom, on Claude's recommendation).** Leave the Windows snapshot as
+  it is for the rest of the run, so every Windows episode uses the same setup, and report
+  results both with and without the contaminated episodes.
+
+- **17 Nov, about 01:30.** Interim results (Linux complete, Windows part way: 1,620 valid
+  episodes, $55.68) written into the report draft's Results, Scoring caveats, Cost and Limits
+  sections, all marked interim.
+
 ## Spend so far
 
 | What | Cost |
@@ -201,6 +209,7 @@ Tom's OK.
 | Smoke test before the full run | $0.56 |
 | Linux episodes before the cron fix (excluded) | about $13 |
 | Full run to 22:26 on 15 Nov | $30.44 |
+| Full run to 01:00 on 17 Nov (cumulative, 1,621 episodes) | $55.68 |
 
 ## Settled rules for whoever runs this
 
