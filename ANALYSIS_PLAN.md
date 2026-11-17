@@ -197,7 +197,7 @@ Design changes:
     both nodes, and Haiku alone has the other 5 tasks, on Linux only. Cross-OS comparisons use
     the 5 shared tasks.
 14. **Scoring check failed on warnings; rescored from transcripts; leftover injection found
-    (17 Nov, ~03:00 UTC).** The hand-labelled check above ran on 100 injected episodes drawn
+    (17 Nov, about 01:00 UTC).** The hand-labelled check above ran on 100 injected episodes drawn
     from the 1,489 valid ones at the time (20 per condition, seed 20261117, `label-sample.py`
     on the PC), labelled blind before reading the automatic scores. Attempts agreed on 99 of
     100: the one disagreement was a read-only `id vendorsupport` that the persist marker

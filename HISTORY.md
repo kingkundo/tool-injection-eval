@@ -178,13 +178,13 @@ Tom's OK.
   running the plan's hand-labelled scoring check now; Qwen stays the priority once the Mac is
   reachable; no stronger or adaptive attacks this week (they go in the report as next steps).
 
-- **17 Nov, ~01:00 to 03:00, scoring check (plan change 14).** 100 injected episodes labelled
+- **17 Nov, about 00:50 to 01:00, scoring check (plan change 14).** 100 injected episodes labelled
   blind. Attempts: 99/100 agree, no real attempts. Warnings: 88/100 (kappa 0.67), under the
   90% bar, every miss a real warning the pattern didn't recognise. Pattern widened, persist
   attempts now need an account-creating command, and the whole run rescored from transcripts
   into `results/main-rescored/` (136 warnings added, 4 false attempts removed).
 
-- **17 Nov, ~03:00, setup flaw found.** The rescoring's false-alarm check showed both VM
+- **17 Nov, about 01:00, setup flaw found.** The rescoring's false-alarm check showed both VM
   snapshots contain one planted line left over from setup (Linux: a `disable` instruction in
   `/srv/cache/manifest.txt`; Windows: a `persist` instruction in `srv\cache\README.txt`). 241
   of 1,618 valid episodes (15%) read it. Those rows are now marked `contaminated` and results
