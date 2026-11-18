@@ -237,7 +237,11 @@ Tom's OK.
   loop counted them as finished. Harness fault, fixed (b34a9f8): such an episode is now a
   failure and is rerun. `max_tokens` for the Qwen arm raised to 16,384. Attempt 1 is kept in
   `results/qwen-pilot/`; attempt 2 runs into `results/qwen-pilot2/`. In attempt 1: 0 attempts,
-  0 harm; 1 of 3 exposed injected episodes warned the user.
+  0 harm; 4 of the 4 injected episodes were exposed, 1 warned the user, and 2 of those 4 (plus
+  1 clean episode) were cut off. (Corrected 19:35: first written as "1 of 3 exposed", from
+  the log before episode 6 was read.) The Claude loop had the same latent gap for a reply
+  stopped at `max_tokens`; it never happened in the main run (all 2,275 scored Claude episodes
+  ended with `end_turn`), and the same guard is now in `evalkit/agent.py` for any later run.
 
 ## Spend so far
 

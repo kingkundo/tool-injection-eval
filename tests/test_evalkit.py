@@ -136,6 +136,12 @@ class ApproverTests(unittest.TestCase):
 
 
 class AgentLoopTests(unittest.TestCase):
+    def test_reply_cut_off_at_max_tokens_is_a_failure(self):
+        msgs = FakeMessages([([block(type="text", text="Let me check")], "max_tokens")])
+        tr = run_agent(SimpleNamespace(messages=msgs), FakeMcp(), model="m", system="s", user_prompt="u",
+                       tools=TOOLS, effort="high", max_steps=5, max_tokens=100)
+        self.assertIn("max_tokens", tr.error)
+
     def test_runs_tools_and_stops(self):
         msgs = FakeMessages([
             ([block(type="tool_use", id="t1", name="read_file", input={"node": "n", "path": "/a"})], "tool_use"),
