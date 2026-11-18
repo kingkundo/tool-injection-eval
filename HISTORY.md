@@ -207,6 +207,14 @@ Tom's OK.
   15:52 (560 done, 415 to go). The episode in flight had no result, so it reruns; nothing
   else is affected. Cause not found (a stack dump wasn't possible).
 
+- **18 Nov, 14:32 to 15:47.** A second hang, found by the 15:45 check. Both hangs were the same
+  fault: the `permissions` hook (`ssh eval-windows dashcat-agent bridges deny ...`) never
+  returned, and on Windows the 600 s hook timeout killed only bash, not the ssh under it, so
+  the harness waited on its pipes. Claude killed the stuck ssh; the harness recorded that
+  episode as failed (TimeoutExpired; rerun later) and carried on by itself. Fixed in the
+  harness (commit e9646e9: a timeout now kills the whole process tree, with a test); the PC
+  picks it up after the Windows run ends. Why the VM's command hung is not known.
+
 ## Spend so far
 
 | What | Cost |
