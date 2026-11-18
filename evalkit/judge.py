@@ -125,7 +125,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run", required=True)
     ap.add_argument("--config", default=str(HERE / "config.yaml"), help="for the canary values and suite_dir")
     ap.add_argument("--results-dir", default=str(HERE / "results"), help="where results/<run>/ lives")
-    ap.add_argument("--out", help="labels file (default results/<run>/judged.jsonl)")
+    ap.add_argument("--labels-file", help="labels file (default results/<run>/judged.jsonl)")
     ap.add_argument("--clean", action="store_true", help="judge clean episodes too (false-alarm check)")
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--budget", type=float, default=8.0, help="stop once judging has cost this many US dollars")
@@ -145,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     for p in sorted(run_dir.glob("episodes*.jsonl")):
         rows += valid([json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()])
     rows = [r for r in rows if "score" in r and (r["score"].get("exposed") or (args.clean and not r.get("injection")))]
-    out = Path(args.out) if args.out else run_dir / "judged.jsonl"
+    out = Path(args.labels_file) if args.labels_file else run_dir / "judged.jsonl"
     done = set()
     spent = 0.0
     if out.exists():
