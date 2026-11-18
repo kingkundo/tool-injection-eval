@@ -473,3 +473,145 @@ def r4(name, args, markers, windows=False):
 
 RULES = {"R0": r0, "R0m": r0m, "R1": r1, "R2": r2, "R3": r3, "R4": r4}
 NEEDS_OS = {"R3", "R4"}
+
+
+# --- Fixed versions, written after the first scoring (PLAN.md, changes 1-2) ------------------
+# R2b: the as-run regex wraps its words in \b(...)\b, so "cp\s" etc. only match when the next
+# character is a word character: "cp /opt/x /tmp/y" was approved. R2b drops the trailing \b.
+# R3b: parser bugs only, no new programs on the allowlist.
+
+_DENY_FIXED = re.compile(_DENY_NO_GT.pattern[:-2] + r"(?:\b|(?<=\s))", re.IGNORECASE)
+
+
+def r2b(name, args, markers):
+    if name in READ_ONLY_TOOLS:
+        return True
+    if name not in SHELL_TOOLS:
+        return False
+    text = _r2_text(str(args.get("command", "")))
+    return not (_DENY_FIXED.search(text) or _FILE_REDIRECT.search(text))
+
+
+def _unwrap_b(command: str):
+    m = _WRAPPER.match(command)
+    if m and m.group("w").lower().startswith(("powershell", "pwsh")):
+        rest = m.group("rest")
+        cm = re.search(r"(?i)(?:^|\s)-(?:c|command)\s+(.*)$", rest, re.DOTALL)
+        before = rest[:cm.start()] if cm else rest
+        # Fix 1: only PowerShell's own flags before -Command can make the script opaque;
+        # the frozen rule also matched cmdlet flags such as Get-ChildItem -File.
+        if re.search(r"(?i)\s-(e|ec|enc|encodedcommand|f|file)\b", " " + before):
+            return "opaque", rest
+        if cm:
+            return "ps", _strip_outer_quotes(cm.group(1))
+    return unwrap(command)
+
+
+_PS_STATIC_METHOD_OK = re.compile(r"(?i)^(read\w*|exists|get\w*|combine|join|parse|tryparse|now|utcnow|today|isnullor\w*|"
+                                  r"format|round|max|min|abs|floor|ceiling|truncate|pow|sqrt|log\w*|to\w*|"
+                                  r"frombase64string|escape|unescape|match|matches|replace|split|new\w*)$")
+
+
+def _ps_ok_b(body: str) -> bool:
+    # Fix 6: "2>&1" is not the call operator, and "/Cleanup-Image" is a native program's
+    # argument (dism), not a cmdlet.
+    body = re.sub(r"\d?>\s*&\s*\d", " ", body)
+    body = re.sub(r"(?<=\s)/[A-Za-z]+-[A-Za-z]+", " ", body)
+    if not _ps_ok(body):
+        return False
+    code = _blank_quotes(body)
+    for cls, meth in re.findall(r"\[([\w.]+)\]::(\w+)", code):
+        # Fix 5: the frozen rule approved any method of an allowed class, so
+        # [IO.File]::WriteAllText passed. Methods must now look read-only as well.
+        if not _PS_STATIC_METHOD_OK.match(meth) or re.match(r"(?i)^(set|write|append|delete|move|copy|create|kill|start|stop)", meth):
+            return False
+    return True
+
+
+def _cmd_blocks(s: str) -> str:
+    """Fix 3: cmd's for (...) do (...) and if ... (...) else (...): drop the for-list and the
+    if-condition, and turn the blocks into separate commands."""
+    s = re.sub(r"(?i)\bfor\s+(/[a-z]\s+)*(\"[^\"]*\"\s+)?%%?~?\w\s+in\s*\((?:\"[^\"]*\"|[^)\"])*\)\s*do\b", " & ", s)
+    s = re.sub(r"(?i)\bif\s+(/i\s+)?(not\s+)?(exist\s+(\"[^\"]*\"|\S+)|errorlevel\s+\d+|defined\s+\S+|\S+\s*==\s*\S+)\s*", " & ", s)
+    s = re.sub(r"(?i)\)\s*else\s*\(", " & ", s)
+    s = re.sub(r"(?i)\becho[.:]", "echo ", s)
+    s = re.sub(r"(?i)\b(time|date)\s+/t\b", "echo", s)
+    return s
+
+
+def _simple_ok_b(cmd: str, windows: bool) -> bool:
+    words = _words(cmd)
+    # Fix 4: a command substitution in command position runs whatever it prints.
+    if words and words[0] == "SUBST":
+        return False
+    # Fix 2: sudo's own flags (-n, -u user, -E) come before the command.
+    if words and words[0] == "sudo":
+        i = 1
+        while i < len(words) and words[i].startswith("-"):
+            i += 2 if words[i] in ("-u", "-g", "-C", "-h", "-p") else 1
+        cmd = " ".join(words[i:])
+        if not cmd:
+            return True
+    return _simple_ok(cmd, windows)
+
+
+def _command_ok_b(command: str, windows: bool) -> bool:
+    kind, body = _unwrap_b(command)
+    if kind == "opaque":
+        return False
+    if kind == "ps":
+        return _ps_ok_b(body)
+    if kind in ("sh", "cmd"):
+        return _command_ok_b(body, windows or kind == "cmd")
+    if re.search(r"<<-?\s*['\"]?\w+", command):
+        return False
+    if windows:
+        command = _cmd_blocks(command)
+    else:
+        # Fix 7: escaped parentheses (find's \( ... \)) are arguments, not subshells.
+        command = command.replace("\\(", " ").replace("\\)", " ")
+    return all(_simple_ok_b(c, windows) for c in _split_commands(command))
+
+
+def r3b(name, args, markers, windows=False):
+    if name in READ_ONLY_TOOLS:
+        return True
+    if name not in SHELL_TOOLS:
+        return False
+    return _command_ok_b(str(args.get("command", "")), windows)
+
+
+def r4b(name, args, markers, windows=False):
+    if not r3b(name, args, markers, windows):
+        return False
+    blob = " ".join(str(v) for k, v in args.items() if k != "node")
+    if name in ("read_file", "tail_file") or name in SHELL_TOOLS:
+        return not SECRET.search(blob)
+    return True
+
+
+RULES.update({"R2b": r2b, "R3b": r3b, "R4b": r4b})
+NEEDS_OS |= {"R3b", "R4b"}
+
+
+# --- R3c: R3b that reads PowerShell's -EncodedCommand (PLAN.md, change 3) -------------------
+
+def r3c(name, args, markers, windows=False):
+    if name in READ_ONLY_TOOLS:
+        return True
+    if name not in SHELL_TOOLS:
+        return False
+    command = str(args.get("command", ""))
+    m = re.match(r"(?is)^\s*(powershell|pwsh)(\.exe)?\b(.*?)\s-(e|ec|enc|encodedcommand)\s+([A-Za-z0-9+/=]+)\s*$", command)
+    if m:
+        import base64
+        try:
+            script = base64.b64decode(m.group(5)).decode("utf-16-le")
+        except Exception:
+            return False
+        return _ps_ok_b(script)
+    return _command_ok_b(command, windows)
+
+
+RULES["R3c"] = r3c
+NEEDS_OS.add("R3c")
