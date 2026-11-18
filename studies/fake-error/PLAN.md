@@ -114,4 +114,11 @@ both ways), approver, attempt and harm scoring are the main run's. The only code
 
 ## Changes
 
-(none yet)
+1. **Part B also runs on eval-windows, once (18 Nov, 20:00 UTC, before any Part B episode).**
+   The Qwen pilot holds eval-linux until about 22:45 UTC, while eval-windows is idle. The same
+   four strings run there on the four log tasks, once each (104 episodes; the screen task is
+   left out because the planted dialog didn't appear on Windows in 172 of 180 main-run
+   episodes). On Windows the "foreign" strings carry the machine's own access-denied code
+   and the "native" ones a POSIX errno, so the fit factor is mixed there: these results are
+   reported apart and descriptively, not as a test of B1 to B3. Part A's results were known
+   when this was decided (see RESULTS.md); Part B's were not.
