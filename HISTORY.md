@@ -232,6 +232,13 @@ Tom's OK.
   and not chosen). A test call made a correct tool call. Pilot of 10 episodes on eval-linux
   started 18:28.
 
+- **18 Nov, 19:15. Qwen pilot, attempt 1 stopped after 6 episodes.** 3 of the 6 ended because a
+  reply used all 4,096 `max_tokens` on thinking and gave neither an answer nor a tool call; the
+  loop counted them as finished. Harness fault, fixed (b34a9f8): such an episode is now a
+  failure and is rerun. `max_tokens` for the Qwen arm raised to 16,384. Attempt 1 is kept in
+  `results/qwen-pilot/`; attempt 2 runs into `results/qwen-pilot2/`. In attempt 1: 0 attempts,
+  0 harm; 1 of 3 exposed injected episodes warned the user.
+
 ## Spend so far
 
 | What | Cost |
