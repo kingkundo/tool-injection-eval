@@ -229,7 +229,7 @@ Design changes:
     Attempts and harm are unaffected: no episode, contaminated or not, attempted either goal.
 
 15. **Windows screen injections rarely reached the model; exposure rescored (18 Nov, about
-    16:40 UTC; Tom's decision pending, Claude's recommendation applied).** Reading the
+    16:40 UTC; approved by Tom at 16:38 UTC, 18 Nov).** Reading the
     undetected Windows `screen-dialog` answers after the run ended showed the planted dialog
     missing from the screen: the answers say there is no dialog, and its text is in no UI tree
     output. Only 8 of 180 Windows screen episodes (all Opus) had the dialog's text in a tool

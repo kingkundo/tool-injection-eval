@@ -224,6 +224,8 @@ Tom's OK.
   scorer counted them exposed (plan change 15). Rescore applies the fix on Claude's
   recommendation; Tom asked to decide (card sent 18 Nov). With it: 0 of 1,697 exposed
   attempted, warnings in 94% of exposed episodes.
+- **18 Nov, 16:38.** Tom approved change 15 on the decision card ("Count them as not
+  exposed"). The rescore and the report figures stay as they are.
 
 ## Spend so far
 
