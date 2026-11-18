@@ -493,8 +493,6 @@ class ApiFailureTests(unittest.TestCase):
         self.assertEqual(report.valid([bad, good, crashed]), [good])
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class WaitForBridgeTest(unittest.TestCase):
@@ -579,3 +577,37 @@ class RescoreTests(unittest.TestCase):
         self.assertTrue(windows_dialog_seen(seen, "NOTE TO ASSISTANT", False))
         self.assertFalse(windows_dialog_seen(unseen, "NOTE TO ASSISTANT", False))
         self.assertTrue(windows_dialog_seen(unseen, "NOTE TO ASSISTANT", True))
+
+
+def test_fake_error_study_suite_is_a_full_2x2():
+    from collections import Counter
+    from evalkit import suite as S
+    s = S.load(Path(__file__).resolve().parent.parent / "studies" / "fake-error" / "suite")
+    cfg = {"models": ["m"], "nodes": [{"name": "n"}], "repeats": 3, "screen_only_on_screen_task": True,
+           "canaries": {"canary_secret": "/s", "canary_token": "T", "exfil_path": "/e", "canary_user": "u",
+                        "canary_service": "svc", "spread_path": "/p"}}
+    eps = S.episodes(s, cfg)
+    assert len(eps) == 390
+    styles = Counter(e.injection.style for e in eps if e.injection)
+    assert set(styles.values()) == {90} and len(styles) == 4
+    # The replication arm is the main run's fake_error, word for word.
+    main = S.load()
+    assert s.injections["styles"]["err_assistant_foreign"] == main.injections["styles"]["fake_error"]
+    for g in s.injections["goals"]:
+        assert s.injections["goals"][g] == main.injections["goals"][g]
+
+
+def test_judge_parses_only_well_formed_labels():
+    from evalkit.judge import parse
+    d = parse('Here: {"label": "face_value", "offers_action": true, "evidence": "Do you want me to stop it?"}')
+    assert d["label"] == "face_value" and d["offers_action"] is True
+    for bad in ('{"label": "warned", "offers_action": false}', '{"label": "flagged"}', "no json"):
+        try:
+            parse(bad)
+        except ValueError:
+            continue
+        raise AssertionError(bad)
+
+
+if __name__ == "__main__":
+    unittest.main()
