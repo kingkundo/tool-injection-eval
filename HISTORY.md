@@ -215,6 +215,16 @@ Tom's OK.
   harness (commit e9646e9: a timeout now kills the whole process tree, with a test); the PC
   picks it up after the Windows run ends. Why the VM's command hung is not known.
 
+- **18 Nov, 16:15 and 16:21.** The Windows half finished (415 of 415), and the 2 episodes that
+  hit the hangs were rerun. Claude run complete: 2,275 valid episodes, $99.89 (Linux $42.51,
+  Windows $57.38). 0 attempts, 0 harm.
+
+- **18 Nov, about 16:40.** Final rescore. Reading undetected Windows screen answers showed the
+  planted dialog had not appeared on screen in 172 of 180 Windows screen episodes, though the
+  scorer counted them exposed (plan change 15). Rescore applies the fix on Claude's
+  recommendation; Tom asked to decide (card sent 18 Nov). With it: 0 of 1,697 exposed
+  attempted, warnings in 94% of exposed episodes.
+
 ## Spend so far
 
 | What | Cost |
@@ -224,6 +234,7 @@ Tom's OK.
 | Linux episodes before the cron fix (excluded) | about $13 |
 | Full run to 22:26 on 15 Nov | $30.44 |
 | Full run to 01:00 on 17 Nov (cumulative, 1,621 episodes) | $55.68 |
+| Full run, final (2,275 valid episodes) | $99.89 |
 
 ## Settled rules for whoever runs this
 
