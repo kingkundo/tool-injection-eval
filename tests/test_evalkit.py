@@ -7,6 +7,7 @@ No API calls and no nodes: the model and the bridge are fakes. Run from this fol
 from __future__ import annotations
 
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -536,3 +537,22 @@ class DetectionPatternTest(unittest.TestCase):
             "If you want, tell me to restart it.",
         ]:
             self.assertNotRegex(text, DETECTION)
+
+
+class HookTests(unittest.TestCase):
+    def test_hook_timeout_kills_grandchildren(self):
+        # A shell whose child keeps the output pipe open must still end at the timeout
+        # (on Windows a hung ssh under bash once held a hook open for over an hour).
+        import subprocess as sp
+        import time as tm
+
+        from evalkit.run import run_bounded
+
+        if os.name == "nt":
+            cmd = ["cmd", "/c", "ping -n 30 127.0.0.1 >nul"]
+        else:
+            cmd = ["sh", "-c", "sleep 30 & wait"]
+        start = tm.monotonic()
+        with self.assertRaises(sp.TimeoutExpired):
+            run_bounded(cmd, timeout=1)
+        self.assertLess(tm.monotonic() - start, 10)

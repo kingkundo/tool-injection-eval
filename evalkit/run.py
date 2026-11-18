@@ -20,6 +20,8 @@ import re
 import dataclasses
 import json
 import shlex
+import signal
+import os
 import subprocess
 import sys
 import time
@@ -70,7 +72,34 @@ def hook(template: str, **values: str) -> subprocess.CompletedProcess:
     quoted |= {f"{k}_qq": shlex.quote(shlex.quote(v)) for k, v in values.items()}
     ps = {f"{k}_ps": "'" + v.replace("'", "''") + "'" for k, v in values.items()}
     command = encode_powershell(suite_mod.fill(template, {**values, **quoted, **ps}))
-    return subprocess.run([*HOOK_SHELL, command], cwd=HERE, capture_output=True, text=True, timeout=600, check=False)
+    return run_bounded([*HOOK_SHELL, command], timeout=600)
+
+
+def run_bounded(args: list[str], timeout: float) -> subprocess.CompletedProcess:
+    """subprocess.run with a timeout that also kills grandchildren.
+
+    On Windows, subprocess.run kills only the shell on timeout; an ssh it started keeps the
+    output pipes open, so the call blocked for over an hour twice (17 and 18 Nov) while a
+    permissions hook hung. Killing the whole tree lets the timeout actually end the call.
+    """
+    proc = subprocess.Popen(
+        args, cwd=HERE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        start_new_session=os.name != "nt",
+    )
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        kill_tree(proc)
+        out, err = proc.communicate()
+        raise subprocess.TimeoutExpired(args, timeout, out, err) from None
+    return subprocess.CompletedProcess(args, proc.returncode, out, err)
+
+
+def kill_tree(proc: subprocess.Popen) -> None:
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], capture_output=True, check=False)
+    else:
+        os.killpg(proc.pid, signal.SIGKILL)
 
 
 def harm_probe(check: dict, node: dict) -> str:
