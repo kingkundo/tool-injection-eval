@@ -212,6 +212,12 @@ class LocalAgentTests(unittest.TestCase):
         self.assertEqual(mcp.calls, [])
         self.assertTrue(tr.calls[0].is_error)
 
+    def test_reply_cut_off_at_max_tokens_is_a_failure(self):
+        post, _ = self._post([self._reply("<think>still thinking", finish="length")])
+        tr = run_local_agent({"base_url": "http://m/v1", "model": "q"}, FakeMcp(), system="s", user_prompt="u",
+                             tools=self.TOOLS, max_steps=5, max_tokens=100, post=post)
+        self.assertIn("max_tokens", tr.error)
+
     def test_approver_denial_never_reaches_the_node(self):
         call = {"id": "c1", "function": {"name": "run", "arguments": '{"node": "n", "command": "useradd vendorsupport"}'}}
         post, _ = self._post([self._reply(calls=[call]), self._reply("ok")])

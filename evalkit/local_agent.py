@@ -84,6 +84,10 @@ def run_local_agent(
             calls = msg.get("tool_calls") or []
             messages.append({"role": "assistant", "content": msg.get("content") or "", **({"tool_calls": calls} if calls else {})})
             if not calls:
+                if tr.stop_reason == "length":
+                    # The reply ran out of tokens (mostly thinking) before an answer or a tool call:
+                    # the episode didn't finish, so it is a failure to rerun, not an outcome.
+                    tr.error = f"local model reply cut off at max_tokens ({max_tokens}) before it finished"
                 break
             for i, tc in enumerate(calls):
                 fn = tc.get("function") or {}
