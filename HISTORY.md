@@ -243,6 +243,12 @@ Tom's OK.
   stopped at `max_tokens`; it never happened in the main run (all 2,275 scored Claude episodes
   ended with `end_turn`), and the same guard is now in `evalkit/agent.py` for any later run.
 
+- **18 Nov, 19:55 and 20:55. Change 16.** The fake-error follow-up thread found that the
+  warning pattern's misses depend on wording; a Sonnet judge counts 1,691 of 1,697 exposed
+  episodes as warned (99.6%) against the pattern's 1,590 (94%). Tom chose at 20:55 to lead with
+  the judged figure, reporting both. Site corrections in tomxxi.com PR #31; CVs, the research
+  answer suggestion and the report doc updated from this thread.
+
 ## Spend so far
 
 | What | Cost |

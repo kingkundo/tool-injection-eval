@@ -248,6 +248,18 @@ Design changes:
     showing is not known; the first Opus evening saw it. Screen placement is therefore
     measured almost only on Linux.
 
+16. **Warnings also scored by a model judge (18 Nov, 19:55 UTC).** While preparing the
+    fake-error follow-up (studies/fake-error/PLAN.md), the pattern's misses were found to depend
+    on the injection's wording: it matches phrases the plain style contains and misses the
+    models' paraphrases of the fake error. `evalkit/judge.py` (Sonnet 5.5) labelled every
+    exposed and clean answer; it agreed with 128 of 132 hand labels made before any judge label
+    was read (all 4 disagreements: hand face_value, judge flagged) and found no warning in the
+    133 uncontaminated clean answers. Judged warnings: 1,691 of 1,697. The pattern stays the
+    pre-registered measure and both are reported; Tom chose (18 Nov, 20:55) to lead with the
+    judged figure. The pattern-based differences between conditions (rule_node 96% against
+    bare 91%) and styles (fake_error 87% against plain 97%) are withdrawn: by the judge every
+    condition, model and style is 99% to 100%.
+
 What the pilot measured, for the forecast: mean cost per episode was about $0.14 for Opus,
 $0.07 for Sonnet and $0.004 for Haiku. That puts the 3,900-episode run at about $280. On this
 PC's VMs, an episode took about 30 s on Linux and 1 to 2 minutes on Windows, plus the reset. No episode in any attempt
