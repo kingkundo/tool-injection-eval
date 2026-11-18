@@ -114,19 +114,26 @@ def main():
             if c.get("approved") is not None and decide("R0", c["name"], c["input"], markers, windows) != c["approved"]:
                 mism += 1
 
-    attacks = yaml.safe_load((HERE / "attacks.yaml").read_text())
-    arows = []
-    caught = collections.defaultdict(collections.Counter)
-    tot = collections.Counter()
-    for at in attacks:
-        markers = tuple(GOAL_MARKERS[at["goal"]])
-        d = {k: decide(k, at["tool"], at["args"], markers, at["os"] == "windows") for k in rules}
-        arows.append({"id": at["id"], "goal": at["goal"], "os": at["os"], "tier": at["tier"], "tool": at["tool"],
-                      **{k: int(not v) for k, v in d.items()}})
-        for key in (("all",), ("tier", at["tier"]), ("goal", at["goal"]), ("os", at["os"])):
-            tot[key] += 1
-            for k, ok in d.items():
-                caught[k][key] += not ok
+    attack_results = {}
+    for set_name in ("attacks", "attacks-holdout"):
+        attacks = yaml.safe_load((HERE / f"{set_name}.yaml").read_text())
+        arows = []
+        caught = collections.defaultdict(collections.Counter)
+        tot = collections.Counter()
+        for at in attacks:
+            markers = tuple(GOAL_MARKERS[at["goal"]])
+            d = {k: decide(k, at["tool"], at["args"], markers, at["os"] == "windows") for k in rules}
+            arows.append({"id": at["id"], "goal": at["goal"], "os": at["os"], "tier": at["tier"], "tool": at["tool"],
+                          **{k: int(not v) for k, v in d.items()}})
+            for key in (("all",), ("tier", at["tier"]), ("goal", at["goal"]), ("os", at["os"])):
+                tot[key] += 1
+                for k, ok in d.items():
+                    caught[k][key] += not ok
+        with (out / f"{set_name}.csv").open("w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(arows[0]))
+            w.writeheader()
+            w.writerows(arows)
+        attack_results[set_name] = {k: {"/".join(key): f"{caught[k][key]}/{tot[key]}" for key in tot} for k in rules}
 
     with (out / "decisions.csv").open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
@@ -138,11 +145,6 @@ def main():
         w.writerow(["episode", "task", "tool", "args", "label"])
         for e, t, n, i in all_ok[:200]:
             w.writerow([e, t, n, json.dumps({k: v for k, v in i.items() if k != "node"}), ""])
-    with (out / "attacks.csv").open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(arows[0]))
-        w.writeheader()
-        w.writerows(arows)
-
     summary = {
         "episodes": ep_count, "calls": calls, "shell_calls": shell_calls, "approval_episodes": approval_eps,
         "r0_mismatches_vs_run": mism,
@@ -151,7 +153,8 @@ def main():
             "episodes_with_refusal": ep_refused[k], "approval_episodes_with_refusal": ep_refused_approval[k],
             "median_first_refusal_point": sorted(first_point[k])[len(first_point[k]) // 2] if first_point[k] else None,
             "refused_by_task": dict(by_task[k]),
-            "attacks_caught": {"/".join(key): f"{caught[k][key]}/{tot[key]}" for key in tot},
+            "attacks_caught": attack_results["attacks"][k],
+            "holdout_caught": attack_results["attacks-holdout"][k],
         } for k in rules},
         "task_calls": dict(task_calls),
     }
