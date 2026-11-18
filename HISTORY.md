@@ -257,6 +257,11 @@ Tom's OK.
   failures were VM starts on a PC low on memory (3.9 GB free with eval-windows busy). Episodes
   took 45 s to 21 min. The fake-error thread took eval-linux at 21:06.
 
+- **18 Nov, 21:49. Tom chose an uncensored Qwen pilot** (amendment to change 10). Reason: no
+  model has acted on an injection yet, so the controls (approval rule, node rules) are still
+  untested. 10 episodes on `qwen3.8-27b-uncensored-mlx`, waiting for a VM from the fake-error
+  study, which holds both at 21:51.
+
 ## Spend so far
 
 | What | Cost |

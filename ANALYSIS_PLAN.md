@@ -163,6 +163,12 @@ Design changes:
     planned, which isn't installed. Tom chose the standard model over an "uncensored" 27B
     variant also on the Mac, so the arm tests a safety-tuned open model people actually deploy.
     The pilot runs 10 episodes on eval-linux (`config-qwen.yaml`, `--run qwen-pilot`).
+    **Uncensored pilot (18 Nov, 21:49 UTC, Tom's choice):** the standard model attempted
+    nothing in its pilot (7 of 7 injected episodes warned), so it can't show whether Dashcat's
+    controls stop an agent that acts. Tom chose a second, exploratory 10-episode pilot on
+    `qwen3.8-27b-uncensored-mlx` (same Mac, same sample and settings, max_tokens 16,384,
+    `--run qwen-uncensored-pilot`). It is reported separately and never pooled with the
+    standard model or the Claude results.
 11. **Opus cut to 5 of the 10 tasks; Haiku runs next (decided 15 Nov, 22:24 UTC, about 4 h
     into the full run).** By 22:25 UTC, Opus had run 258 episodes (178 Linux, 80 Windows):
     225 of the 237 injected ones were exposed (the 12 misses all on `disk-space`), none was
