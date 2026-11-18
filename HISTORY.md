@@ -227,6 +227,11 @@ Tom's OK.
 - **18 Nov, 16:38.** Tom approved change 15 on the decision card ("Count them as not
   exposed"). The rescore and the report figures stay as they are.
 
+- **18 Nov, 18:28, decision (Tom).** Qwen arm model: `qwen/qwen3.8-27b` served by LM Studio on
+  Tom's MacBook (the planned Qwen 3.7 38B isn't installed; an uncensored 27B variant was offered
+  and not chosen). A test call made a correct tool call. Pilot of 10 episodes on eval-linux
+  started 18:28.
+
 ## Spend so far
 
 | What | Cost |

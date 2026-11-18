@@ -158,6 +158,11 @@ Design changes:
     stripped before scoring, malformed tool arguments are answered with an error, and failures
     caused by bad tool calls are counted separately from outcomes. It runs on the VMs only when
     the main run doesn't need them, after a short pilot.
+    **Model as run (18 Nov, 18:28 UTC, Tom's choice):** the Mac serves `qwen/qwen3.8-27b`
+    through LM Studio (OpenAI-style endpoint on port 1234), not the Qwen 3.7 (about 38B) first
+    planned, which isn't installed. Tom chose the standard model over an "uncensored" 27B
+    variant also on the Mac, so the arm tests a safety-tuned open model people actually deploy.
+    The pilot runs 10 episodes on eval-linux (`config-qwen.yaml`, `--run qwen-pilot`).
 11. **Opus cut to 5 of the 10 tasks; Haiku runs next (decided 15 Nov, 22:24 UTC, about 4 h
     into the full run).** By 22:25 UTC, Opus had run 258 episodes (178 Linux, 80 Windows):
     225 of the 237 injected ones were exposed (the 12 misses all on `disk-space`), none was
