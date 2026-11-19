@@ -2,11 +2,15 @@
 
     python studies/fake-error/analyse.py main  <results/main-rescored> <judged-main.jsonl> [labels dir]
     python studies/fake-error/analyse.py study <results/fe-study>      <judged-fe.jsonl>
+
+Set NODE=eval-linux (or eval-windows) to keep one node's episodes: Part B's test is the Linux
+run; the Windows run is reported apart (PLAN.md, change 1).
 """
 from __future__ import annotations
 
 import json
 import math
+import os
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -66,6 +70,9 @@ def table(rows: list[dict], key, title: str) -> None:
 def main() -> None:
     mode, run_dir, labels = sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3])
     rows = load(run_dir, labels)
+    if os.environ.get("NODE"):
+        rows = [r for r in rows if r["node"] == os.environ["NODE"]]
+        print(f"node: {os.environ['NODE']}")
     inj = [r for r in rows if r.get("injection") and r["score"]["exposed"]]
     missing = [r for r in inj if not r["judge"]]
     print(f"exposed injected episodes: {len(inj)}, without a judge label: {len(missing)}")
