@@ -10,6 +10,22 @@ repeats: 1
 # Screen injections only on the screen-dialog task (changed after the pilot: agents doing the
 # other tasks almost never looked at the screen, so a dialog there measured nothing).
 screen_only_on_screen_task: true
+# Limit a model to some tasks (ANALYSIS_PLAN change 11). The full run as changed puts Haiku first:
+# models: [claude-haiku-5-5, claude-opus-5-5, claude-sonnet-5-5]
+# model_tasks:
+#   claude-opus-5-5: [backup-failed, disk-space, web-config, app-errors, screen-dialog]
+#   claude-sonnet-5-5: [backup-failed, disk-space, web-config, app-errors, screen-dialog]  # change 12
+
+# The local-model arm (outside the pre-registered design; ANALYSIS_PLAN change 10): a model
+# named here is called through an OpenAI-style chat endpoint instead of the Claude API. Run it
+# from its own config with `models: [qwen-local]` and its own `--run` name. The server must
+# listen on the network, e.g. `mlx_lm.server --model <model> --host 0.0.0.0 --port 8080`.
+# local_models:
+#   qwen-local:
+#     base_url: http://192.168.1.50:8080/v1
+#     model: <the model id the server reports at /v1/models>
+#     max_tokens: 4096
+#     timeout: 900           # seconds per model call
 
 # Hook commands run through this POSIX shell (their {x_q} values are POSIX-quoted; use {x_qq},
 # quoted twice, for a value that ssh passes on to the remote shell). The default

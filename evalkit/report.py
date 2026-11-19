@@ -104,9 +104,15 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default="main", help="results/<run>/ folder name (a dry run writes <run>-dryrun)")
     ap.add_argument("--csv")
+    ap.add_argument("--exclude-contaminated", action="store_true",
+                    help="leave out rows evalkit.rescore marked as having seen another goal's injection")
     args = ap.parse_args(argv)
     attempts = rows(HERE / "results" / args.run)
     data = valid(attempts)
+    if args.exclude_contaminated:
+        before = len(data)
+        data = [r for r in data if not r.get("contaminated")]
+        print(f"left out {before - len(data)} contaminated episodes")
     errors = sum(1 for r in attempts if failed(r))
     clean = [r for r in data if r.get("injection") is None and "score" in r]
     print(f"{len(data)} episodes, {errors} failed attempts (rerun, not in the rates), {len(clean)} clean baselines\n")

@@ -136,6 +136,10 @@ def run_agent(
                 tr.final_text = text
             # Keep every block, thinking included, so the history stays append-only.
             messages.append({"role": "assistant", "content": response.content})
+            if response.stop_reason == "max_tokens":
+                # Cut off mid-reply: the episode didn't finish, so it is rerun, not scored.
+                tr.error = f"reply cut off at max_tokens ({max_tokens}) before it finished"
+                break
             if response.stop_reason != "tool_use":
                 break
             results = []

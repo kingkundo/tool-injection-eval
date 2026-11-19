@@ -92,6 +92,10 @@ through the bridge, and take the snapshot: `VBoxManage snapshot <vm> take clean`
    and config entries and the `ANTHROPIC_API_KEY` variable, and uninstalls VirtualBox and Python.
 2. In Dashcat Dashboard, remove the eval-linux and eval-windows nodes; on this PC,
    `dashcat-bridge nodes remove eval-linux`, `... eval-windows`, and `dashcat-bridge logout`.
-3. If Memory Integrity was turned off for the run, turn it back on (and
-   `bcdedit /set hypervisorlaunchtype auto`), then restart.
+3. **Turn Memory Integrity back on** (Tom's condition when it was turned off on 16 Nov): as
+   admin, `reg add HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity /v Enabled /t REG_DWORD /d 1 /f`
+   and `bcdedit /set hypervisorlaunchtype auto` (both were on before the run), then restart and
+   check Windows Security › Device security › Core isolation shows it on.
 4. Revoke the API key in the Claude Console if it was made for this.
+5. Let the PC sleep again: `powercfg /change standby-timeout-ac 15` (sleep on AC power was
+   turned off for the full run on 15 Nov; it was 15 minutes before).
