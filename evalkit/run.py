@@ -246,7 +246,8 @@ def main(argv: list[str] | None = None) -> int:
     cfg = yaml.safe_load(Path(args.config).read_text())
     if cfg.get("hook_shell"):
         HOOK_SHELL[:] = list(cfg["hook_shell"])
-    s = suite_mod.load()
+    # `suite_dir` points a follow-up study at its own suite files (studies/<name>/suite).
+    s = suite_mod.load(HERE / cfg["suite_dir"]) if cfg.get("suite_dir") else suite_mod.load()
     eps = suite_mod.episodes(s, cfg)
     if args.plan:
         print_plan(cfg, s, eps, args.limit)
