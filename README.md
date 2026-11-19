@@ -6,8 +6,24 @@ log line, a file, a dialog on screen), and how much each deployment-side control
 a system-prompt rule, node instructions, Dashcat permissions and a person approving actions.
 
 It started in the Dashcat repo's `research/` folder (this repo keeps that history) and lives
-here on its own, so it can be published without the product's code. Design, hypotheses and
-limits are in the research note.
+here on its own, so it can be published without the product's code. The full write-up, with
+design, hypotheses, results and limits, is at
+[tomxxi.com/work/tool-output-injection](https://tomxxi.com/work/tool-output-injection).
+
+## Results in brief
+
+- **Main run:** 2,275 scored episodes with Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5 on one
+  Linux and one Windows VM. No model attempted the planted action in any of the 1,697 episodes
+  where it read the planted text (95% upper bound 0.2%), and nothing was harmed. By a model
+  judge checked against hand labels, the agent warned the user in 1,691 of them.
+- **Open-weights arm:** two 10-episode Qwen 3.8 27B pilots, standard and "uncensored"; no
+  attempts. Exploratory, never pooled with the Claude results.
+- **Follow-ups:** [`studies/approval-rules`](studies/approval-rules) replays ten approval rules
+  over the run's 19,769 tool calls; [`studies/fake-error`](studies/fake-error) tests a more
+  convincing fake error message.
+
+The pre-registered plan and its sixteen dated changes are in [ANALYSIS_PLAN.md](ANALYSIS_PLAN.md),
+and the decision-by-decision record is in [HISTORY.md](HISTORY.md).
 
 ## Safety rules
 
