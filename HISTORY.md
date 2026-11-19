@@ -271,6 +271,12 @@ Tom's OK.
   32 min. So neither Qwen model acted, and the controls are still untested by a model that
   does. eval-linux handed back to the fake-error study at 23:55.
 
+- **19 Nov, 11:52. Host settings restored** (RUNBOOK cleanup steps 3 and 5): Memory Integrity
+  and the Windows hypervisor back on (checked after a restart: HVCI running, hypervisor
+  present), sleep on AC back to 15 minutes. The eval VMs, results and nodes are left in place
+  for Tom to decide; `cleanup-host.ps1 -Uninstall` must not be run on this PC as written,
+  because other projects use its VirtualBox (win95, win98 VMs) and system Python.
+
 ## Spend so far
 
 | What | Cost |
