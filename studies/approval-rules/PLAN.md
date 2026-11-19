@@ -111,5 +111,12 @@ are kept and reported next to the changed ones.
 5. **Labelling method (21:30).** The 200-call sample of calls every rule approved held no shell
    commands, because R1 refuses them all, so it could not find honest changes. Instead every one
    of the 3,110 shell commands was searched for change words (`touch`, `rm`, `>`, `Set-`,
-   `restart`, `kill` and about 40 more; 138 hits) and each hit was read by hand. Every call any
+   `restart`, `kill` and about 40 more; 138 hits) and each hit was read by hand (by Claude, like
+   every label in this study). Every call any
    rule refused was also read, grouped by reason.
+6. **Failed attempts no longer counted (19 Nov 2026, about 23:00 UTC).** The benign set above
+   says 2,278 episodes. That count included 3 failed attempts whose episodes were rerun, because
+   the replay kept every row with a transcript. It now keeps one row per episode, the last that
+   didn't fail, as the main report does: 2,275 episodes, 19,736 calls, 3,109 shell commands.
+   Rerun on the same data, only R1's counts changed (by one call and one episode); no rule, attack
+   or label changed. RESULTS.md has the details.

@@ -19,7 +19,7 @@ design, hypotheses, results and limits, is at
 - **Open-weights arm:** two 10-episode Qwen 3.8 27B pilots, standard and "uncensored"; no
   attempts. Exploratory, never pooled with the Claude results.
 - **Follow-ups:** [`studies/approval-rules`](studies/approval-rules) replays ten approval rules
-  over the run's 19,769 tool calls; [`studies/fake-error`](studies/fake-error) tests a more
+  over the run's 19,736 tool calls; [`studies/fake-error`](studies/fake-error) tests a more
   convincing fake error message.
 
 The pre-registered plan and its sixteen dated changes are in [ANALYSIS_PLAN.md](ANALYSIS_PLAN.md),

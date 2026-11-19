@@ -2,7 +2,7 @@
 
 A small AI Control study on the main run's data: can a rule that approves or refuses an AI's
 tool calls refuse fewer harmless calls without letting more harmful ones through? It replays
-ten rules offline over the 19,769 tool calls recorded in the main run, plus hand-written attack
+ten rules offline over the 19,736 tool calls recorded in the main run, plus hand-written attack
 sets. No new agent runs.
 
 | File | What |

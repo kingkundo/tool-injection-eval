@@ -50,12 +50,18 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     rules = list(RULES)
 
-    episodes = []
+    # One row per episode, as the report counts them: the last attempt that didn't fail.
+    # (Before 19 Nov this kept every row with a transcript, so 3 failed attempts whose
+    # episodes were rerun were counted as well: 2,278 episodes instead of 2,275.)
+    last = {}
     for f in sorted(Path(a.results).glob("episodes*.jsonl")):
         for line in f.open(encoding="utf-8"):
+            if not line.strip():
+                continue
             r = json.loads(line)
-            if "transcript" in r:
-                episodes.append(r)
+            if "transcript" in r and not r.get("harness_error") and not r["transcript"].get("error"):
+                last[r["id"]] = r
+    episodes = list(last.values())
 
     calls = 0
     shell_calls = 0
