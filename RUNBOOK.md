@@ -1,7 +1,9 @@
-# Runbook: Tom's home PC
+# Runbook: the PC it ran on
 
-How this eval runs on KUNDO-PC (Windows 11 Home, 64 GB, VirtualBox 7.2 on the Windows
-hypervisor). The README covers the harness in general; this covers this machine.
+How this eval ran on Tom's home PC (Windows 11 Home, 32 GB, VirtualBox 7.2, Python 3.12). The
+README covers the harness in general; this covers that machine, as a worked example for anyone
+building the same setup. The host scripts in `scripts/host/` assume its `D:\eval-vms` layout.
+The configs it ran with are in [configs/](configs/).
 
 ## Where things are
 
@@ -16,7 +18,7 @@ hypervisor). The README covers the harness in general; this covers this machine.
 | `%USERPROFILE%\.ssh\eval_ed25519`, `config` | The key and `Host eval-*` entries the hooks use |
 
 Both VMs are Dashcat nodes on Tom's personal account, joined **Direct mode only** (the Dashcat
-connector can't reach them) and paired with this PC's bridge, `dashcat-bridge@KUNDO-PC`. Their
+connector can't reach them) and paired with this PC's bridge, `dashcat-bridge@<host>`. Their
 `clean` snapshots are taken running, signed in as `eval`, with administrator commands on and
 the NAT (internet) link **off**: the harness reaches them on the host-only network only.
 
@@ -60,8 +62,9 @@ next episode's reset puts the VM back.
 
 ## Things this machine needs
 
-- **Memory Integrity is on**, so VirtualBox runs on the Windows hypervisor, which is slow and
-  fragile: Linux needs 1 vCPU (2 hang at boot) and EFI; Windows setup stalled with 4 vCPUs.
+- **With Memory Integrity on** (it was until 16 Nov, and is again since 19 Nov), VirtualBox
+  runs on the Windows hypervisor, which is slow and fragile: Linux needs 1 vCPU (2 hang at
+  boot) and EFI; Windows setup stalled with 4 vCPUs.
   Turning Memory Integrity off (and the hypervisor, `bcdedit /set hypervisorlaunchtype off`,
   then a restart) makes the VMs much faster, but stops WSL and Docker until it's turned back
   on. Dashcat Agent on this PC starts at sign-in, so a restart needs Tom to sign in.
@@ -86,7 +89,10 @@ through the bridge, and take the snapshot: `VBoxManage snapshot <vm> take clean`
 
 ## Cleanup at the end
 
-1. Copy out what to keep, then run, elevated:
+Steps 3 and 5 were done on 19 Nov (HISTORY.md). The VMs, nodes and results are kept for now.
+
+1. Copy out what to keep, then run, elevated (only on a PC that has no other use for
+   VirtualBox or Python: `-Uninstall` removes both):
    `powershell -ExecutionPolicy Bypass -File D:\eval-vms\harness\scripts\cleanup-host.ps1 -Root D:\eval-vms -Keep D:\eval-results -Uninstall`.
    It copies `results\`, deletes the VMs, ISOs, checkout, Python environment, the eval ssh key
    and config entries and the `ANTHROPIC_API_KEY` variable, and uninstalls VirtualBox and Python.

@@ -36,8 +36,8 @@ overlap, otherwise a *trend*.
 | fake_system | 531/533 = 100% [99–100] | 0 | 2 | 27 (5%) | 518/533 = 97% |
 | fake_error | 587/589 = 100% [99–100] | 1 | 1 | 12 (2%) | 512/589 = 87% |
 
-**Judge check.** Before reading any judge label for them, Claude labelled 132 answers by
-hand: a stratified random 60 (20 per style) and the 72 fake-error answers the pattern scored
+**Judge check.** Before reading any judge label for them, Claude (a second Claude model, not
+the judge, reading each answer; no person labelled them) labelled 132 answers: a stratified random 60 (20 per style) and the 72 fake-error answers the pattern scored
 as not warning. Agreement on the three-way label: 60/60 and 68/72 (128/132 in all). All four
 disagreements were answers Claude read as face value that the judge called flagged; each
 treated the error as real while also saying something doubtful about it. On `offers_action`,

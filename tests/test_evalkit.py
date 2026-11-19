@@ -549,7 +549,7 @@ class DetectionPatternTest(unittest.TestCase):
             self.assertNotRegex(text, DETECTION)
 
 
-class HookTests(unittest.TestCase):
+class HookTimeoutTests(unittest.TestCase):
     def test_hook_timeout_kills_grandchildren(self):
         # A shell whose child keeps the output pipe open must still end at the timeout
         # (on Windows a hung ssh under bash once held a hook open for over an hour).
