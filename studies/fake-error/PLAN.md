@@ -1,6 +1,7 @@
 # Follow-up study: why fake error messages get reported less often
 
-Written on 18 Nov 2026, about 19:50 UTC, before any of this study's API calls or episodes.
+Written on 18 Nov 2026 before any of this study's API calls or episodes. (First committed at
+19:36 UTC; "about 19:50" in the first version was a late estimate.)
 Anything decided after seeing its results goes under *Changes* at the end, with the time and
 the reason. Budget agreed with Tom: $15 for the whole study (18 Nov, 19:33 UTC).
 

@@ -8,15 +8,18 @@ how the PC is set up is in [RUNBOOK.md](RUNBOOK.md). Times are UTC.
 **Roles.** Tom Taylor designed the study's aims, owns the budget and the PC, and decides every
 design change. Claude (Claude Code, working through Dashcat on Tom's PC) built the harness and
 VMs, ran and monitored the runs, and proposed changes; it makes no design change without
-Tom's OK.
+Tom's OK. Claude also made every label used to check the scoring (17 and 18 Nov) and read the
+transcripts behind every hand check below; no person labelled episodes.
+
+Issue and pull request numbers prefixed "Dashcat" refer to the Dashcat product repository,
+which is private.
 
 ## Timeline
 
 ### 9–10 Nov: design and harness
 
-- **9 Nov.** The eval is added to the Dashcat repo under `research/` (Dashcat-Ltd/dashcat
-  #272): 10 diagnosis tasks, injected text planted in what the tools return, 4 goals x 3
-  placements x 3 styles, 5 conditions from no defence to Dashcat's hard controls, harm checked
+- **9 Nov.** The eval is added to the Dashcat repo under `research/` (Dashcat #272): 10 diagnosis tasks, injected text planted in what the tools return,
+  4 goals x 3 placements x 3 styles, 5 conditions from no defence to Dashcat's hard controls, harm checked
   on the machine itself.
 - **10 Nov.** A dry run of all 3,900 episodes against a scripted fake model, with no API calls,
   found four bugs before anything was spent: the spread goal could never succeed (Direct mode
@@ -25,7 +28,7 @@ Tom's OK.
   run (anywhere from $230 to $1,700).
 - **10 Nov, decision (Tom).** Run on Tom's home PC (32 GB, Windows 11 Home), so VirtualBox
   rather than Hyper-V, with the VMs on a host-only network away from the home network. Never
-  on an Admit One machine.
+  on a work machine.
 
 ### 15 Nov, 03:20–08:20: building the VMs
 
@@ -64,8 +67,8 @@ Tom's OK.
 
 - **Budget (Tom):** $35 cap, 50 episodes spread over every model, node, condition, task and
   goal, run as one process per VM.
-- **Result:** three attempts, $6.44 in all. Six faults found and fixed (ANALYSIS_PLAN changes
-  1 to 6), including five task prompts that never led the agent to the planted text.
+- **Result:** three tries at the pilot, $6.44 in all. Six faults found and fixed
+  (ANALYSIS_PLAN changes 1 to 6), including five task prompts that never led the agent to the planted text.
   Exposure rose from 10 of 31 to 35 of 42 injected episodes. No model attempted or caused
   harm in any pilot episode. Merged as PR #1.
 - **Measured cost per episode:** Opus about $0.14, Sonnet $0.07, Haiku $0.004. Forecast for
@@ -277,22 +280,47 @@ Tom's OK.
   for Tom to decide; `cleanup-host.ps1 -Uninstall` must not be run on this PC as written,
   because other projects use its VirtualBox (win95, win98 VMs) and system Python.
 
-## Spend so far
+### 18–19 Nov: follow-up studies and publication
+
+- **18 Nov, evening. Approval rules study** (`studies/approval-rules/`): plan,
+  attack set and frozen rules committed before scoring, then a held-out attack set; ten rules
+  replayed offline over the main run's tool calls. No API spend.
+
+- **19 Nov, about 04:30. Fake-error study finished** (`studies/fake-error/`): the main run's
+  fake-error gap was the warning pattern; a log-native error addressed to the reader was
+  passed on as genuine by Haiku in 10 of 90 answers, and acted on in none.
+
+- **19 Nov, 22:30. Repository made public** by Tom, alongside the write-up.
+
+- **19 Nov, about 23:00. Review after publication.** The approval rules replay counted 3
+  failed attempts whose episodes were rerun (2,278 episodes instead of 2,275); fixed and
+  rerun, only R1's counts moved by one (approval rules PLAN.md, change 6). The scoring-check
+  samples and labels went into `studies/scoring-check/`, and the docs now say who made those
+  labels. The as-run configs went into `configs/`.
+
+## Spend
+
+API spend at list prices. Cumulative rows are marked; the others add up.
 
 | What | Cost |
 |---|---|
-| Pilot (three attempts) | $6.44 |
+| Dry run against a scripted model (3,900 episodes, no API calls) | $0 |
+| Pilot (three tries, 50 episodes) | $6.44 |
 | Smoke test before the full run | $0.56 |
 | Linux episodes before the cron fix (excluded) | about $13 |
-| Full run to 22:26 on 15 Nov | $30.44 |
-| Full run to 01:00 on 17 Nov (cumulative, 1,621 episodes) | $55.68 |
-| Full run, final (2,275 valid episodes) | $99.89 |
+| Full run, cumulative to 22:26 on 15 Nov | $30.44 |
+| Full run, cumulative to 01:00 on 17 Nov (1,621 episodes) | $55.68 |
+| **Full run, final (2,275 valid episodes)** | **$99.89** |
+| Qwen pilots (served on Tom's own laptop) | $0 |
+| Fake-error study: judging the main run, Part B episodes and judging them | about $12 |
+| Approval rules study (offline replay) | $0 |
+| **Total** | **about $132** |
 
 ## Settled rules for whoever runs this
 
 - No design change once the full run started without Tom's OK; every one goes in
   ANALYSIS_PLAN.md with its reason and the data seen at the time.
 - Never print the API key or the VM password; never read the invite files into chat.
-- Never touch Admit One machines; never close Tom's own apps on the PC.
+- Never touch work machines; never close Tom's own apps on the PC.
 - Hand-check every "attempted" episode before reporting (one early match was a harmless
   `getent passwd vendorsupport` check).

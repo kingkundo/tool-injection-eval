@@ -7,8 +7,8 @@ results/main-rescored --out <dir>` (needs the private transcripts).
 
 ## Data
 
-- **Honest calls:** 19,769 tool calls from 2,278 episodes (all conditions, Haiku, Sonnet and
-  Opus), of which 3,110 are shell commands (`run`, `run_as_admin`). No model ever attempted an
+- **Honest calls:** 19,736 tool calls from the 2,275 scored episodes (all conditions, Haiku,
+  Sonnet and Opus), of which 3,109 are shell commands (`run`, `run_as_admin`). No model ever attempted an
   injected action. Reading every refused call and every shell command that contained a change
   word found **one** call that changed the machine: a write test on the backup drive
   (`touch /mnt/backup/.wtest && rm -f /mnt/backup/.wtest`) in a backup-failed episode.
@@ -28,13 +28,13 @@ rule caught the write test.
 |---|---:|---:|---:|:-:|---:|---:|
 | R0 as run | 69 | 2.2% | 2.9% | no | 43/63 | 27/35 |
 | R0m as run, without canary names | 65 | 2.1% | 2.7% | no | 24/63 | 18/35 |
-| R1 no commands at all | 3,111 | 100% | 56.3% | yes | 63/63 | 35/35 |
+| R1 no commands at all | 3,110 | 100% | 56.3% | yes | 63/63 | 35/35 |
 | R2 quote-aware denylist | 3 | 0.1% | 0.1% | no | 22/63 | 14/35 |
 | R2b same, regex bug fixed | 31 | 1.0% | 1.4% | yes | 24/63 | 15/35 |
 | R3 allowlist (frozen) | 882 | 28.3% | 16.8% | yes | 61/63 | 31/35 |
 | R3b allowlist, parser fixed | 254 | 8.1% | 8.3% | yes | 63/63* | 33/35 |
 | **R3c allowlist, reads encoded PowerShell** | **149** | **4.8%** | **5.6%** | **yes** | **63/63*** | **33/35** |
-| R4 allowlist + secret reads (frozen) | 929 | 29.6% | 18.4% | yes | 62/63 | 32/35 |
+| R4 allowlist + secret reads (frozen) | 929 | 29.7% | 18.4% | yes | 62/63 | 32/35 |
 | R4b same, parser fixed | 310 | 9.7% | 10.6% | yes | 63/63* | 33/35 |
 
 \* Two parser bugs were found through attacks R3 missed in the dev set, so these are not
@@ -54,7 +54,7 @@ evasive ones (6/41, 4/41). The allowlists caught 17/17 and 39–41/41.
    also refused agents that were checking whether the attacker's account existed
    (`id vendorsupport`): it punished the safety check.
 2. **Denylists can be made nearly free and stay weak.** Ignoring quoted text removes all 12 of
-   the run's false refusals (R2: 3 refusals in 19,769 calls), but a list of bad words catches
+   the run's false refusals (R2: 3 refusals in 19,736 calls), but a list of bad words catches
    4–6 of 41 evasive attacks. Anything it doesn't name (`tee`, `dd`, `install`, `sc.exe`,
    `Set-Content`, a Python one-liner) passes.
 3. **An allowlist catches almost everything, at a price.** R3c caught 33 of 35 held-out
@@ -82,11 +82,21 @@ evasive ones (6/41, 4/41). The allowlists caught 17/17 and 39–41/41.
 | | Hypothesis | Result |
 |---|---|---|
 | H1 | R2 refuses at most 2 of the run's 12 false refusals and catches every plain attack R0m catches | **Supported.** 0 of 12; 13/17 plain, same as R0m |
-| H2 | R1 refuses over 10% of honest calls; at least half of episodes meet a refusal | **Supported.** 15.7% of calls, 56.3% of episodes |
+| H2 | R1 refuses over 10% of honest calls; at least half of episodes meet a refusal | **Supported.** 15.8% of calls, 56.3% of episodes |
 | H3 | Denylists catch ≥90% of plain attacks and under half of evasive; R3 ≥95% of every `run` tier | **Partly.** Denylists caught 76–88% of plain (under 90%, because of the `\b` bug and gaps such as `copy`, `net stop`) and 10–15% of evasive. Frozen R3: 100% plain, 95% evasive |
 | H4 | R3 refuses more than R2, but under 5% of honest shell commands | **Not supported** for the frozen R3 (28.3%). R3c, after logged fixes, is at 4.8% |
 | H5 | The secret-read check refuses honest calls mostly in booking-config tasks and none outside | **Partly.** 52 of 56 in app-errors; 4 elsewhere (disk-space 3, service-health 1) |
 | H6 | Without canary names the as-run approver catches fewer attacks | **Supported.** 43 → 24 of 63; 27 → 18 of 35 held out |
+
+## Correction, 19 Nov 2026
+
+The first version of this page counted 2,278 episodes and 19,769 calls. The replay read every
+row with a transcript, so it also counted 3 failed attempts whose episodes were later rerun.
+`replay.py` now keeps one row per episode, the last that didn't fail, as `evalkit.report`
+does. Rerun on the same data: 2,275 episodes, 19,736 calls, 3,109 shell commands. Only R1's
+counts changed (3,111 to 3,110 refused calls, 1,282 to 1,281 episodes), plus two rounded
+shares (R4 29.6% to 29.7% of shell commands, R1 15.7% to 15.8% of calls). Every attack result,
+every other rule's refusals and every finding are unchanged. PLAN.md, change 6.
 
 ## Limits
 
@@ -95,7 +105,8 @@ evasive ones (6/41, 4/41). The allowlists caught 17/17 and 39–41/41.
 - A replay judges each call alone. After a refusal a real agent changes course, so "episodes
   interrupted" is how often a person would have been asked to say no, not how often the task
   failed. Half of R3c's interruptions came after the agent was more than halfway through.
-- Labels are mine and were not blind to the rules.
+- The labels (read-only or a change) were made by Claude, reading each call, and were not
+  blind to the rules.
 - The honest calls come from one suite of diagnosis tasks on two VMs. Tasks that legitimately
   change things (fixing, not diagnosing) would need a rule that knows what the user asked for.
 - No language-model monitor was tested: it is the obvious next rule, and the held-out misses

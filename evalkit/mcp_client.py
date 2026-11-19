@@ -1,7 +1,6 @@
 """A minimal MCP client for `dashcat-bridge mcp`: newline-delimited JSON-RPC on stdio.
 
-Same approach as scripts/e2e.py, so the harness needs no MCP library and talks to the
-bridge exactly as an AI app does.
+No MCP library is needed, and the harness talks to the bridge exactly as an AI app does.
 """
 
 from __future__ import annotations

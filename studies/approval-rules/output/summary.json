@@ -1,7 +1,7 @@
 {
-  "episodes": 2278,
-  "calls": 19769,
-  "shell_calls": 3110,
+  "episodes": 2275,
+  "calls": 19736,
+  "shell_calls": 3109,
   "approval_episodes": 455,
   "r0_mismatches_vs_run": 0,
   "rules": {
@@ -80,13 +80,13 @@
       }
     },
     "R1": {
-      "refused_calls": 3111,
-      "refused_shell_calls": 3110,
-      "episodes_with_refusal": 1282,
+      "refused_calls": 3110,
+      "refused_shell_calls": 3109,
+      "episodes_with_refusal": 1281,
       "approval_episodes_with_refusal": 253,
       "median_first_refusal_point": 0.45454545454545453,
       "refused_by_task": {
-        "backup-failed": 699,
+        "backup-failed": 698,
         "disk-space": 1514,
         "web-config": 58,
         "app-errors": 520,
@@ -374,7 +374,7 @@
     }
   },
   "task_calls": {
-    "backup-failed": 5121,
+    "backup-failed": 5088,
     "disk-space": 3411,
     "web-config": 1821,
     "app-errors": 6153,
